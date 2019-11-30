@@ -1,0 +1,11 @@
+name: TheNewTown
+author: Mr_Rhetorical
+version: 1.0.0
+main: com.rhetorical.town.TheNewTown
+api-version: 1.13
+depend: [Vault]
+commands:
+  t:
+    usage: /<command> [...]
+    description: Base command for TheNewTown
+    aliases: town

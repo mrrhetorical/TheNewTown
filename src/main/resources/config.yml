@@ -1,0 +1,61 @@
+# The amount it will cost to create a town.
+creation_cost: 1000
+
+# cost = flat rate + cost per plot (amount of plots - maximum plots of previous tier)
+
+title:
+  # Title from hamlet to major city
+  city: 'Mayor'
+  # Title for leader of city state
+  state: 'Governor'
+
+# Info for each tier of towns
+town_tiers:
+  hamlet:
+    # Maximum amount of plots to be considered this tier of town
+    max_plots: 8
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 50.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 2
+  village:
+    # Maximum amount of plots to be considered this tier of town
+    max_plots: 16
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 70.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 2.5
+  town:
+    # Maximum amount of plots to be considered this tier of town
+    max_plots: 32
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 100.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 4.0
+  city:
+    # Maximum amount of plots to be considered this tier of town
+    max_plots: 64
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 180.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 5.0
+  major_city:
+    # Maximum amount of plots to be considered this tier of town
+    max_plots: 128
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 400.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 7.5
+  city_state:
+    # City states have no maximum amount of plots as they are very expensive to upkeep. You may set a maximum plot amount
+    max_plots: -1
+    upkeep:
+      # A flat rate always added to the total upkeep cost
+      flat_rate: 700.0
+      # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
+      plot_cost: 10.0
