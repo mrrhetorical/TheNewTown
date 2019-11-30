@@ -3,6 +3,8 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.files.TownFile;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -87,16 +89,26 @@ public class Town {
 		save();
 	}
 
-	//todo: finish saving
 	public void save() {
 
 		TownFile file = TownFile.open();
 
+		file.getData().set(getName() + ".residents", "");
+		List<String> r = new ArrayList<>();
+		for (UUID resident : getResidents())
+			r.add(resident.toString());
+
+		file.getData().set(getName() + ".residents", r);
+
+		file.getData().set(getName() + ".mayor", getMayor().toString());
+
+		file.getData().set(getName() + ".tax", getTax());
 
 		for (Plot plot : getPlots()) {
 			plot.save(getName(), file);
 		}
 
+		file.saveData();
 	}
 
 	public UUID getMayor() {
