@@ -1,16 +1,21 @@
 package com.rhetorical.town.towns;
 
+import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
 import java.util.UUID;
 
-public class Plot implements Listener {
+public class Plot {
 
-	private final long id; //inconsequential
+	private final long id; // inconsequential
+
+	private String town; // town owner
 
 	private UUID owner, leaser;
 
@@ -20,14 +25,19 @@ public class Plot implements Listener {
 	private boolean forSale;
 	private float cost;
 
+	private final PlotListener plotListener;
 
-	Plot(long id, UUID owner, UUID leaser, Chunk chunk, boolean forSale, float cost) {
+	Plot(long id, UUID owner, UUID leaser, Chunk chunk, boolean forSale, float cost, String town) {
 		this.id = id;
 		setOwner(owner);
 		setLeaser(leaser);
 		setChunk(chunk);
 		setForSale(forSale);
 		setCost(cost);
+		setTown(town);
+
+		plotListener = new PlotListener(this);
+		Bukkit.getPluginManager().registerEvents(plotListener, TheNewTown.getInstance());
 	}
 
 	private void setOwner(UUID value) {
@@ -78,10 +88,32 @@ public class Plot implements Listener {
 		return id;
 	}
 
+	public String getTown() {
+		return town;
+	}
+
+	private void setTown(String value) {
+		town = value;
+	}
+
 	public void setChunk(Chunk chunk) {
 		worldName = chunk.getWorld().getName();
 		x = chunk.getX();
 		z = chunk.getZ();
+	}
+
+	public boolean isChunk(Chunk chunk) {
+		return getX() == chunk.getX() && getZ() == chunk.getZ() && getWorldName().equalsIgnoreCase(chunk.getWorld().getName());
+	}
+
+	public boolean isInPlot(Location location) {
+		if (location.getWorld() == null)
+			return false;
+		return getWorldName().equalsIgnoreCase(location.getWorld().getName()) && location.getChunk().getX() == getX() && location.getChunk().getZ() == getZ();
+	}
+
+	void unregister() {
+		HandlerList.unregisterAll(plotListener);
 	}
 
 	void save(String town, TownFile file) {
@@ -119,7 +151,8 @@ public class Plot implements Listener {
 		Chunk chunk = world.getChunkAt(x, z);
 
 
-		return new Plot(id, owner, leaser, chunk, fs, cost);
+		return new Plot(id, owner, leaser, chunk, fs, cost, town);
 	}
+
 
 }

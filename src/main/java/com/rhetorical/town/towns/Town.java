@@ -1,10 +1,9 @@
 package com.rhetorical.town.towns;
 
 import com.rhetorical.town.files.TownFile;
+import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.time.DateTimeException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -51,20 +50,7 @@ public class Town {
 			getPlots().add(plot);
 		}
 
-		int size = getPlots().size();
-
-		if (size > TownType.MAJOR_CITY.getMaxPlots())
-			townType = TownType.CITY_STATE;
-		else if (size > TownType.CITY.getMaxPlots())
-			townType = TownType.MAJOR_CITY;
-		else if (size > TownType.TOWN.getMaxPlots())
-			townType = TownType.CITY;
-		else if (size > TownType.VILLAGE.getMaxPlots())
-			townType = TownType.TOWN;
-		else if (size > TownType.HAMLET.getMaxPlots())
-			townType = TownType.VILLAGE;
-		else
-			townType = TownType.HAMLET;
+		townType = calculateTownSize(getPlots().size());
 
 		List<String> residents = file.getData().getStringList(name + ".residents");
 		for (String key : residents) {
@@ -143,12 +129,82 @@ public class Town {
 		tax = value;
 	}
 
+	public boolean addPlot(Chunk chunk) {
+		if (TownManager.getInstance().isChunkClaimed(chunk))
+			return false;
+
+		//todo: world guard checks to make sure plot doesn't overlap region
+
+		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName());
+		getPlots().add(plot);
+
+		if (getPlots().size() > getTownType().getMaxPlots()) {
+			setTownType(TownManager.getInstance().getNextTownType(getTownType()));
+		}
+
+		save();
+		return true;
+	}
+
+	public boolean removePlot(Chunk chunk) {
+		if (!isChunkClaimed(chunk))
+			return false;
+
+		for (Plot plot : new ArrayList<>(getPlots()))
+			if (plot.isChunk(chunk)) {
+				getPlots().remove(plot);
+				plot.unregister();
+			}
+
+		if (getPlots().size() <= TownManager.getInstance().getPreviousTownType(getTownType()).getMaxPlots()) {
+			setTownType(TownManager.getInstance().getPreviousTownType(getTownType()));
+		}
+
+		return true;
+	}
+
 	public TownType getTownType() {
 		return townType;
 	}
 
 	public void setTownType(TownType value) {
 		townType = value;
+	}
+
+	boolean isChunkClaimed(Chunk chunk) {
+		for (Plot plot : getPlots())
+			if (plot.isChunk(chunk))
+				return true;
+
+		return false;
+	}
+
+	private long generatePlotId() {
+		long id = 0;
+		List<Long> used = new ArrayList<>();
+		for (Plot plot : getPlots())
+			used.add(plot.getId());
+
+		while(used.contains(id))
+			id++;
+
+		return id;
+	}
+
+	private static TownType calculateTownSize(int plots) {
+
+		if (plots > TownType.MAJOR_CITY.getMaxPlots())
+			return TownType.CITY_STATE;
+		else if (plots > TownType.CITY.getMaxPlots())
+			return TownType.MAJOR_CITY;
+		else if (plots > TownType.TOWN.getMaxPlots())
+			return TownType.CITY;
+		else if (plots > TownType.VILLAGE.getMaxPlots())
+			return TownType.TOWN;
+		else if (plots > TownType.HAMLET.getMaxPlots())
+			return TownType.VILLAGE;
+		else
+			return TownType.HAMLET;
 	}
 
 }

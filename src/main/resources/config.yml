@@ -1,6 +1,9 @@
 # The amount it will cost to create a town.
 creation_cost: 1000
 
+# The period for which upkeep will be charged for each town as well as tax collected from residents in each town (in hours). Valid values: (0, 672]
+upkeep_period: 72
+
 # cost = flat rate + cost per plot (amount of plots - maximum plots of previous tier)
 
 title:
