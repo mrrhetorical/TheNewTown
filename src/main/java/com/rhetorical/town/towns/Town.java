@@ -1,9 +1,16 @@
 package com.rhetorical.town.towns;
 
+import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import javafx.util.converter.LocalDateTimeStringConverter;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
 
+import javax.naming.NameAlreadyBoundException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +27,9 @@ public class Town {
 	private TownType townType;
 
 	private float tax = 0f;
+
+	private LocalDateTime lastTaxPeriod;
+	private LocalDateTime lastUpkeepPeriod;
 
 	/**
 	 * Used in town loading.
@@ -59,14 +69,27 @@ public class Town {
 		}
 
 		tax = (float) file.getData().getDouble(name + ".tax");
+
+		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
+
+		lastTaxPeriod = converter.fromString(file.getData().getString(getName() + ".lastTaxPeriod"));
+		lastUpkeepPeriod = converter.fromString(file.getData().getString(getName() + ".lastUpkeepPeriod"));
 	}
 
 	/**
 	 * Used in town creation & initialization.
 	 * */
-	public Town(UUID mayor, Plot initial, String name) {
+	public Town(UUID mayor, Chunk initial, String name) throws PlotAlreadyExistsException {
 		setMayor(mayor);
-		plots.add(initial);
+		if (!addPlot(initial)) {
+			PlotAlreadyExistsException.FailReason reason;
+			if (!TownManager.getInstance().isChunkClaimed(initial))
+				reason = PlotAlreadyExistsException.FailReason.ALREADY_CLAIMED;
+			else
+				reason = PlotAlreadyExistsException.FailReason.REGION_PROTECTION;
+
+				throw new PlotAlreadyExistsException(initial, reason);
+		}
 		setTax(0f);
 		residents.add(mayor);
 		setName(name);
@@ -89,6 +112,12 @@ public class Town {
 		file.getData().set(getName() + ".mayor", getMayor().toString());
 
 		file.getData().set(getName() + ".tax", getTax());
+
+		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
+
+		file.getData().set(getName() + ".lastTaxPeriod", converter.toString(lastTaxPeriod));
+
+		file.getData().set(getName() + ".lastUpkeepPeriod", converter.toString(lastUpkeepPeriod));
 
 		for (Plot plot : getPlots()) {
 			plot.save(getName(), file);
@@ -163,6 +192,12 @@ public class Town {
 		return true;
 	}
 
+	void delete() {
+		for (Plot plot : getPlots()) {
+			plot.unregister();
+		}
+	}
+
 	public TownType getTownType() {
 		return townType;
 	}
@@ -189,6 +224,63 @@ public class Town {
 			id++;
 
 		return id;
+	}
+
+	private void demote() {
+		if (getTownType() == TownType.HAMLET) {
+			TownManager.getInstance().deleteTown(getName());
+			return;
+		}
+
+		setTownType(TownManager.getInstance().getPreviousTownType(getTownType()));
+
+		while (getPlots().size() > getTownType().getMaxPlots()) {
+			getPlots().remove(getPlots().size() - 1); //remove most recently added plot
+		}
+	}
+
+	void collectTaxes() {
+
+		LocalDateTime now = LocalDateTime.now();
+
+		if (lastTaxPeriod == null)
+			lastTaxPeriod = now;
+		if (lastUpkeepPeriod == null)
+			lastUpkeepPeriod = now;
+
+		if (ChronoUnit.HOURS.between(now, lastTaxPeriod) <= TownManager.getInstance().getTaxPeriod()) {
+			lastTaxPeriod = now;
+			List<UUID> residents = new ArrayList<>(getResidents());
+			double collected = 0d;
+			for (UUID resident : residents) {
+				if (getMayor().equals(resident))
+					continue;
+				EconomyResponse r = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(resident), (double) getTax());
+				if (!r.transactionSuccess())
+					getResidents().remove(resident);
+				else
+					collected += (double) getTax();
+			}
+
+			for (Plot plot : getPlots()) {
+				collected += plot.collectRent();
+			}
+
+			EconomyResponse r = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(getMayor()), collected);
+			if (!r.transactionSuccess())
+				Bukkit.getLogger().severe("Could not deposit money into mayor of " + getName() + "'s account!");
+		}
+
+		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) <= TownManager.getInstance().getUpkeepPeriod()) {
+			lastUpkeepPeriod = now;
+
+			EconomyResponse tax = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getMayor()), (double) TownManager.getInstance().getUpkeep(this));
+			if (!tax.transactionSuccess())
+				demote();
+
+		}
+
+		save();
 	}
 
 	private static TownType calculateTownSize(int plots) {

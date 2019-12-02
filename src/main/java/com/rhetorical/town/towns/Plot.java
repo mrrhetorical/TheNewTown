@@ -2,12 +2,13 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
 
 import java.util.UUID;
 
@@ -126,6 +127,22 @@ public class Plot {
 		file.getData().set(base + ".forSale", isForSale());
 		file.getData().set(base + ".cost", getCost());
 		file.saveData();
+	}
+
+	double collectRent() {
+		if (leaser == null)
+			return 0;
+
+		double collected = 0;
+
+		EconomyResponse r = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getLeaser()), getCost());
+
+		if (!r.transactionSuccess()) {
+			leaser = null;
+		} else
+			collected += getCost();
+
+		return collected;
 	}
 
 	static Plot loadPlot(String town, long id, TownFile file) {

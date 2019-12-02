@@ -1,13 +1,17 @@
 # The amount it will cost to create a town.
 creation_cost: 1000
 
-# The period for which upkeep will be charged for each town as well as tax collected from residents in each town (in hours). Valid values: (0, 672]
-upkeep_period: 72
+# The period for which upkeep & taxes will be charged for each town as well as tax collected from residents in each town (in hours). Valid values: (0, 672]
+period:
+  upkeep: 72
+  tax: 72
+  # Time (in minutes) that the server will check up on upkeep timers. Values less than 5 not recommended, has minimal performance impact.
+  checkup: 5
 
 # cost = flat rate + cost per plot (amount of plots - maximum plots of previous tier)
 
 title:
-  # Title from hamlet to major city
+  # Title from hamlet to major city of town leader
   city: 'Mayor'
   # Title for leader of city state
   state: 'Governor'
