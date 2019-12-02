@@ -18,9 +18,9 @@ public class TownManager {
 
 	private Map<String, Town> towns = new HashMap<>();
 
-	private int upkeepPeriod = 72;
-	private int taxPeriod = 72;
-	private int checkupPeriod = 5;
+	private int upkeepPeriod;
+	private int taxPeriod;
+	private int checkupPeriod;
 
 	private TownManager() {
 		TownFile file = TownFile.open();
@@ -31,6 +31,10 @@ public class TownManager {
 				Town town = new Town(name);
 				towns.put(name, town);
 			}
+
+		upkeepPeriod = TheNewTown.getInstance().getConfig().getInt("period.upkeep");
+		taxPeriod = TheNewTown.getInstance().getConfig().getInt("period.tax");
+		checkupPeriod = TheNewTown.getInstance().getConfig().getInt("period.checkup");
 
 		startCheckups();
 	}
