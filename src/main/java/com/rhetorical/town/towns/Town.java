@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
 
-import javax.naming.NameAlreadyBoundException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -48,19 +47,19 @@ public class Town {
 			return;
 		setMayor(UUID.fromString(m));
 
-		ConfigurationSection plots = file.getData().getConfigurationSection(name + ".plots");
-		for (String key : plots.getKeys(false)) {
-			long id;
-			try {
-				id = Long.parseLong(key);
-			} catch (Exception ignored) { continue; }
-			Plot plot = Plot.loadPlot(name, id, file);
-			if (plot == null)
-				continue;
-			getPlots().add(plot);
-		}
-
-		townType = calculateTownSize(getPlots().size());
+//		ConfigurationSection plots = file.getData().getConfigurationSection(name + ".plots");
+//		for (String key : plots.getKeys(false)) {
+//			long id;
+//			try {
+//				id = Long.parseLong(key);
+//			} catch (Exception ignored) { continue; }
+//			Plot plot = Plot.loadPlot(name, id, file);
+//			if (plot == null)
+//				continue;
+//			getPlots().add(plot);
+//		}
+//
+//		townType = calculateTownSize(getPlots().size());
 
 		List<String> residents = file.getData().getStringList(name + ".residents");
 		for (String key : residents) {
@@ -80,7 +79,12 @@ public class Town {
 	 * Used in town creation & initialization.
 	 * */
 	public Town(UUID mayor, Chunk initial, String name) throws PlotAlreadyExistsException {
+		Bukkit.getServer().getLogger().info("Created town");
 		setMayor(mayor);
+		setTax(0f);
+		residents.add(mayor);
+		setName(name);
+		setTownType(TownType.HAMLET);
 		if (!addPlot(initial)) {
 			PlotAlreadyExistsException.FailReason reason;
 			if (!TownManager.getInstance().isChunkClaimed(initial))
@@ -90,19 +94,29 @@ public class Town {
 
 				throw new PlotAlreadyExistsException(initial, reason);
 		}
-		setTax(0f);
-		residents.add(mayor);
-		setName(name);
-		setTownType(TownType.HAMLET);
+	}
 
-		save();
+	void loadPlots(TownFile file) {
+		ConfigurationSection plots = file.getData().getConfigurationSection(name + ".plots");
+		for (String key : plots.getKeys(false)) {
+			long id;
+			try {
+				id = Long.parseLong(key);
+			} catch (Exception ignored) { continue; }
+			Plot plot = Plot.loadPlot(name, id, file);
+			if (plot == null)
+				continue;
+			getPlots().add(plot);
+		}
+
+		townType = calculateTownSize(getPlots().size());
 	}
 
 	public void save() {
 
 		TownFile file = TownFile.open();
 
-		file.getData().set(getName() + ".residents", "");
+		file.getData().set(getName() + ".residents", null);
 		List<String> r = new ArrayList<>();
 		for (UUID resident : getResidents())
 			r.add(resident.toString());
@@ -118,6 +132,8 @@ public class Town {
 		file.getData().set(getName() + ".lastTaxPeriod", converter.toString(lastTaxPeriod));
 
 		file.getData().set(getName() + ".lastUpkeepPeriod", converter.toString(lastUpkeepPeriod));
+
+		file.getData().set(getName() + ".plots", null);
 
 		for (Plot plot : getPlots()) {
 			plot.save(getName(), file);
@@ -167,11 +183,11 @@ public class Town {
 		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName());
 		getPlots().add(plot);
 
-		if (getPlots().size() > getTownType().getMaxPlots()) {
+		if (getTownType() == null)
+			setTownType(TownType.HAMLET);
+		else if (getPlots().size() > getTownType().getMaxPlots())
 			setTownType(TownManager.getInstance().getNextTownType(getTownType()));
-		}
 
-		save();
 		return true;
 	}
 
@@ -188,6 +204,11 @@ public class Town {
 		if (getPlots().size() <= TownManager.getInstance().getPreviousTownType(getTownType()).getMaxPlots()) {
 			setTownType(TownManager.getInstance().getPreviousTownType(getTownType()));
 		}
+
+		if (getPlots().size() == 0)
+			TownManager.getInstance().deleteTown(getName());
+		else
+			save();
 
 		return true;
 	}
@@ -206,7 +227,7 @@ public class Town {
 		townType = value;
 	}
 
-	boolean isChunkClaimed(Chunk chunk) {
+	public boolean isChunkClaimed(Chunk chunk) {
 		for (Plot plot : getPlots())
 			if (plot.isChunk(chunk))
 				return true;
