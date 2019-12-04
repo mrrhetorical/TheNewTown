@@ -3,13 +3,15 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 
 public enum TownType {
-	HAMLET(8, 50f, 2f), VILLAGE(16, 70f, 2.5f), TOWN(32, 100f, 4f), CITY(64, 180f, 5f), MAJOR_CITY(128, 400f, 7.5f), CITY_STATE(-1, 700f, 10f), NULL(-1, -1f, -1f);
+	HAMLET("Hamlet", 8, 50f, 2f), VILLAGE("Village", 16, 70f, 2.5f), TOWN("Town", 32, 100f, 4f), CITY("City", 64, 180f, 5f), MAJOR_CITY("Major City", 128, 400f, 7.5f), CITY_STATE("City State", -1, 700f, 10f), NULL("NULL", -1, -1f, -1f);
 
+	private final String readableName;
 	private int maxPlots;
 	private float flatCost;
 	private float plotCost;
 
-	TownType(int plots, float flat, float rate) {
+	TownType(String rn, int plots, float flat, float rate) {
+		readableName = rn;
 		maxPlots = plots;
 		flatCost = flat;
 		plotCost = rate;
@@ -38,6 +40,10 @@ public enum TownType {
 		if (id >= TownType.values().length - 1)
 			return NULL;
 		return TownType.values()[id];
+	}
+
+	public String getReadable() {
+		return readableName;
 	}
 
 }
