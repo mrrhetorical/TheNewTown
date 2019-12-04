@@ -1,6 +1,7 @@
 package com.rhetorical.town;
 
 import com.rhetorical.town.commands.TownCommand;
+import com.rhetorical.town.towns.TownManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -28,6 +29,8 @@ public class TheNewTown extends JavaPlugin {
 		setCreationCost((float) getConfig().getDouble("creation_cost"));
 
 		setupEconomy();
+
+		TownManager.getInstance(); // Load towns
 	}
 
 	public static TheNewTown getInstance() {

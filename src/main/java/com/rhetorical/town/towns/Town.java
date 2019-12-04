@@ -33,7 +33,6 @@ public class Town {
 	/**
 	 * Used in town loading.
 	 * */
-	@SuppressWarnings("")
 	public Town(String name) {
 		TownFile file = TownFile.open();
 
@@ -46,20 +45,6 @@ public class Town {
 		if (m == null)
 			return;
 		setMayor(UUID.fromString(m));
-
-//		ConfigurationSection plots = file.getData().getConfigurationSection(name + ".plots");
-//		for (String key : plots.getKeys(false)) {
-//			long id;
-//			try {
-//				id = Long.parseLong(key);
-//			} catch (Exception ignored) { continue; }
-//			Plot plot = Plot.loadPlot(name, id, file);
-//			if (plot == null)
-//				continue;
-//			getPlots().add(plot);
-//		}
-//
-//		townType = calculateTownSize(getPlots().size());
 
 		List<String> residents = file.getData().getStringList(name + ".residents");
 		for (String key : residents) {
@@ -218,6 +203,17 @@ public class Town {
 			return false;
 
 		getResidents().add(target);
+		return true;
+	}
+
+	public boolean removePlayer(UUID target) {
+		if (!getResidents().contains(target))
+			return false;
+
+		if (target.equals(getMayor()))
+			return false;
+
+		getResidents().remove(target);
 		return true;
 	}
 
