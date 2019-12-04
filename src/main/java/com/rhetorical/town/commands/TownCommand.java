@@ -26,6 +26,7 @@ public class TownCommand {
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"),
 		Buy("/t lease - Leases the current plot from the town.", "tnt.lease"),
 		Flag("/t flag [plot/town] [flag] [true/false] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
+		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"),
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
 		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
