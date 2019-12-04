@@ -2,6 +2,8 @@ package com.rhetorical.town.commands;
 
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
+import com.rhetorical.town.towns.invite.InviteManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.command.Command;
@@ -13,19 +15,19 @@ public class TownCommand {
 
 	enum CommandData {
 
-		Help("/t help {page} - Shows the help messages for the given page, (or first page if none given).", "tnt.help"),
-		Create("/t create [name] - Claims the plot you're standing in and creates the new town.", "tnt.create"),
-		Delete("/t delete [name] [name] - Deletes the town as mayor. Input town name twice to confirm. (m)", "tnt.delete"),
+		Help("/t help {page} - Shows the help messages for the given page, (or first page if none given).", "tnt.help"), // done
+		Create("/t create [name] - Claims the plot you're standing in and creates the new town.", "tnt.create"), // done
+		Delete("/t delete [name] [name] - Deletes the town as mayor. Input town name twice to confirm. (m)", "tnt.delete"), // done
 		Join("/t join [town name] - Attempts to join the town with the given name.", "tnt.join"),
 		Invite("/t invite [player] - Invites the given player to your town. (m)", "tnt.invite"),
-		Claim("/t claim - Claims the plot you're standing in for your town. (m)", "tnt.claim"),
-		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"),
+		Claim("/t claim - Claims the plot you're standing in for your town. (m)", "tnt.claim"), // done
+		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"),
 		Buy("/t lease - Leases the current plot from the town.", "tnt.lease"),
 		Flag("/t flag [plot/town] [flag] [true/false] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"),
 		Flags("/t flag {args} - Set flags for the town. (m)", "tnt.flag"),
-		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"),
+		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
 		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list");
 
 		private String message,
@@ -275,6 +277,81 @@ public class TownCommand {
 				p.sendMessage(ChatColor.GRAY + "The current chunk is claimed by " + ChatColor.GOLD + town.getName() + ChatColor.GRAY + ".");
 				return;
 			}
+		} else if (args[0].equalsIgnoreCase("invite")) {
+			if (!checkPerm(sender, CommandData.Invite))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t invite [player]");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town t = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (t == null) {
+				p.sendMessage(ChatColor.RED + "You do not belong to a town! Ask for an invite to a town, or create one using '/t create [name]'!");
+				return;
+			}
+
+			if (!t.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be a mayor to invite people to your town!");
+				return;
+			}
+
+			String pName = args[1];
+			Player target = Bukkit.getPlayer(pName);
+
+			if (target == null || !target.isOnline()) {
+				p.sendMessage(ChatColor.RED + "Could not invite player to your town!");
+				return;
+			}
+
+			if (target.equals(p)) {
+				p.sendMessage(ChatColor.RED + "You can't invite yourself to your own town!");
+				return;
+			}
+
+			InviteManager.getInstance().generateRequest(p.getUniqueId(), target.getUniqueId(), t.getName());
+			return;
+		} else if (args[0].equalsIgnoreCase("join")) {
+			if (!checkPerm(sender, CommandData.Join))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t join [name]");
+				return;
+			}
+
+			String townName = args[1];
+			Town town = TownManager.getInstance().getTown(townName);
+			if (town == null) {
+				sender.sendMessage(ChatColor.RED + "No such town exists with that name!");
+				return;
+			}
+
+			if (!InviteManager.getInstance().tryAcceptRequest(p.getUniqueId(), town.getName())) {
+				sender.sendMessage(ChatColor.RED + "Could not join that town! You require an invite to join towns!");
+				return;
+			} else {
+				sender.sendMessage(ChatColor.GREEN + "Successfully joined town!");
+				town.save();
+				return;
+			}
+
 		}
 	}
 

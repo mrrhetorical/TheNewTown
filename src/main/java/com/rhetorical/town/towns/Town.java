@@ -213,6 +213,14 @@ public class Town {
 		return true;
 	}
 
+	public boolean addPlayer(UUID target) {
+		if (getResidents().contains(target))
+			return false;
+
+		getResidents().add(target);
+		return true;
+	}
+
 	void delete() {
 		for (Plot plot : getPlots()) {
 			plot.unregister();
