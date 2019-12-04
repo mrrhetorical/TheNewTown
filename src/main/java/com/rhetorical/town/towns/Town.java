@@ -269,7 +269,7 @@ public class Town {
 		if (lastUpkeepPeriod == null)
 			lastUpkeepPeriod = now;
 
-		if (ChronoUnit.HOURS.between(now, lastTaxPeriod) <= TownManager.getInstance().getTaxPeriod()) {
+		if (ChronoUnit.HOURS.between(now, lastTaxPeriod) >= TownManager.getInstance().getTaxPeriod()) {
 			lastTaxPeriod = now;
 			List<UUID> residents = new ArrayList<>(getResidents());
 			double collected = 0d;
@@ -292,7 +292,7 @@ public class Town {
 				Bukkit.getLogger().severe("Could not deposit money into mayor of " + getName() + "'s account!");
 		}
 
-		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) <= TownManager.getInstance().getUpkeepPeriod()) {
+		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) >= TownManager.getInstance().getUpkeepPeriod()) {
 			lastUpkeepPeriod = now;
 
 			EconomyResponse tax = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getMayor()), (double) TownManager.getInstance().getUpkeep(this));

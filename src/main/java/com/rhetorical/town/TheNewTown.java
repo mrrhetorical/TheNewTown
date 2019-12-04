@@ -13,12 +13,19 @@ public class TheNewTown extends JavaPlugin {
 
 	private Economy economy;
 
+	private float creationCost = 1000f;
+
 	@Override
 	public void onEnable() {
 		if (instance != null)
 			return;
 
 		instance = this;
+
+		saveDefaultConfig();
+		reloadConfig();
+
+		setCreationCost((float) getConfig().getDouble("creation_cost"));
 
 		setupEconomy();
 	}
@@ -38,6 +45,14 @@ public class TheNewTown extends JavaPlugin {
 		}
 
 		return (economy != null);
+	}
+
+	private void setCreationCost(float value) {
+		creationCost = value;
+	}
+
+	public float getCreationCost() {
+		return creationCost;
 	}
 
 	@Override

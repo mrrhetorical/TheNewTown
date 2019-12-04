@@ -22,10 +22,11 @@ public class TownCommand {
 		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"),
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"),
 		Buy("/t lease - Leases the current plot from the town.", "tnt.lease"),
+		Flag("/t flag [plot/town] [flag] [true/false] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"),
 		Flags("/t flag {args} - Set flags for the town. (m)", "tnt.flag"),
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"),
-		List("/t list - Lists all the towns, their type, their mayor, and they population.", "tnt.list");
+		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list");
 
 		private String message,
 				permission;
@@ -134,6 +135,62 @@ public class TownCommand {
 			}
 
 			sender.sendMessage(ChatColor.GREEN + "Successfully created town " + ChatColor.GOLD + name + ChatColor.GREEN + "!");
+		} else if (args[0].equalsIgnoreCase("delete")) {
+			if (!checkPerm(sender, CommandData.Delete))
+				return;
+
+			if (args.length != 3) {
+				sender.sendMessage(ChatColor.RED + "Improper usage! Correct usage: /t delete [name] [name]");
+				return;
+			}
+
+			if (sender.isOp() || sender.hasPermission("tnt.admin") || sender instanceof ConsoleCommandSender) {
+				String town = args[1];
+				Town t = TownManager.getInstance().getTown(town);
+				if (t == null) {
+					sender.sendMessage(ChatColor.RED + "No such town exists with that name!");
+					return;
+				}
+
+				String town2 = args[2];
+
+				if (!town.equals(town2)) {
+					sender.sendMessage(ChatColor.RED + "Could not delete town! Town names do not match!");
+					return;
+				}
+
+				TownManager.getInstance().deleteTown(town);
+				sender.sendMessage(ChatColor.GREEN + "Successfully deleted town!");
+				return;
+			}
+
+			if (!(sender instanceof Player))
+				return;
+
+			Player p = (Player) sender;
+
+			Town t = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+			if(!t.getMayor().equals(p.getUniqueId())) {
+				sender.sendMessage(ChatColor.RED + "You can only delete towns as a town Mayor!");
+				return;
+			}
+
+			String a = args[1],
+					b = args[2];
+
+			if (!a.equals(t.getName())) {
+				sender.sendMessage(ChatColor.RED + "Could not delete town! You can only delete your own town!");
+				return;
+			}
+
+			if (!a.equals(b)) {
+				sender.sendMessage(ChatColor.RED + "Could not delete town! Town names do not match!");
+				return;
+			}
+
+			TownManager.getInstance().deleteTown(a);
+			sender.sendMessage(ChatColor.GREEN + "Successfully deleted town!");
+			return;
 		} else if (args[0].equalsIgnoreCase("claim")) {
 			if (!checkPerm(sender, CommandData.Claim))
 				return;

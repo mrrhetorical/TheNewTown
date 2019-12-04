@@ -2,9 +2,12 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Map;
@@ -118,6 +121,19 @@ public class TownManager {
 			Bukkit.getLogger().info(String.format("A plot was to be claimed at [%s, %s], but was unable to do so!", e.getChunk().getX(), e.getChunk().getZ()));
 			Bukkit.getLogger().info(String.format("Reason: %s", e.getFailReason().toString()));
 			return false;
+		}
+
+		float cost = TheNewTown.getInstance().getCreationCost();
+
+		EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(owner), cost);
+		Player p = Bukkit.getPlayer(owner);
+		if (!response.transactionSuccess()) {
+			if (p != null)
+				p.sendMessage(ChatColor.RED + String.format("Insufficient funds to create town! Funds required: %s", cost));
+			return false;
+		} else {
+			if (p != null)
+				p.sendMessage(ChatColor.GREEN + String.format("%s has been charged to your account!", cost));
 		}
 
 		town.save();

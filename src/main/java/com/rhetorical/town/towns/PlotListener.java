@@ -27,20 +27,21 @@ class PlotListener implements Listener {
 
 	@EventHandler
 	public void onPlayerEnterExitPlot(PlayerMoveEvent e) {
-
-		//Leaving
-		if (!getPlot().isInPlot(e.getTo()) && getPlot().isInPlot(e.getFrom())) {
-			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
-			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk()))
-				return;
-			e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Leaving %s", getPlot().getTown())));
-		}
 		//Entering
-		else if (getPlot().isInPlot(e.getTo()) && !getPlot().isInPlot(e.getFrom())) {
+		if (getPlot().isInPlot(e.getTo()) && !getPlot().isInPlot(e.getFrom())) {
 			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
 			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk()))
 				return;
 			e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s", getPlot().getTown())));
+		}
+		//Leaving
+		else if (!getPlot().isInPlot(e.getTo()) && getPlot().isInPlot(e.getFrom())) {
+			if (TownManager.getInstance().isChunkClaimed(e.getTo().getChunk()))
+				return;
+			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
+			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk()))
+				return;
+			e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Leaving %s", getPlot().getTown())));
 		} else
 			return;
 	}
