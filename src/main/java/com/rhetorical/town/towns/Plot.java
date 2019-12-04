@@ -2,7 +2,6 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
-import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -27,6 +26,7 @@ public class Plot {
 	private float cost;
 
 	private final PlotListener plotListener;
+
 
 	Plot(long id, UUID owner, UUID leaser, Chunk chunk, boolean forSale, float cost, String town) {
 		this.id = id;

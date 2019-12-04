@@ -2,9 +2,12 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Map;
@@ -23,6 +26,25 @@ public class TownManager {
 	private int checkupPeriod;
 
 	private TownManager() {
+		if (instance != null)
+			return;
+
+		instance = this;
+
+		upkeepPeriod = TheNewTown.getInstance().getConfig().getInt("period.upkeep");
+		taxPeriod = TheNewTown.getInstance().getConfig().getInt("period.tax");
+		checkupPeriod = TheNewTown.getInstance().getConfig().getInt("period.checkup");
+
+		load();
+
+		startCheckups();
+	}
+
+	public static TownManager getInstance() {
+		return instance != null ? instance : new TownManager();
+	}
+
+	private void load() {
 		TownFile file = TownFile.open();
 		ConfigurationSection townNames = file.getData().getConfigurationSection("");
 
@@ -32,18 +54,8 @@ public class TownManager {
 				towns.put(name, town);
 			}
 
-		upkeepPeriod = TheNewTown.getInstance().getConfig().getInt("period.upkeep");
-		taxPeriod = TheNewTown.getInstance().getConfig().getInt("period.tax");
-		checkupPeriod = TheNewTown.getInstance().getConfig().getInt("period.checkup");
-
-		startCheckups();
-	}
-
-	public static TownManager getInstance() {
-		if (instance == null)
-			instance = new TownManager();
-
-		return instance;
+		for (Town town : getTowns().values())
+			town.loadPlots(file);
 	}
 
 	public Map<String, Town> getTowns() {
@@ -53,6 +65,17 @@ public class TownManager {
 	public Town getTown(String name) {
 		if (towns.containsKey(name))
 			return towns.get(name);
+		return null;
+	}
+
+	public Town getTown(Chunk chunk) {
+		for (Town town : towns.values()) {
+			for (Plot plot : town.getPlots()) {
+				if (plot.getX() == chunk.getX() && plot.getZ() == chunk.getZ() && plot.getWorldName().equals(chunk.getWorld().getName()))
+					return town;
+			}
+		}
+
 		return null;
 	}
 
@@ -79,15 +102,6 @@ public class TownManager {
 
 		//todo: worldguard stuff to check
 
-		Town town;
-		try {
-			town = new Town(owner, chunk, name);
-		} catch (PlotAlreadyExistsException e) {
-			Bukkit.getLogger().info(String.format("A plot was to be claimed at [%s, %s], but was unable to do so!", e.getChunk().getX(), e.getChunk().getZ()));
-			Bukkit.getLogger().info(String.format("Reason: %s", e.getFailReason().toString()));
-			return false;
-		}
-
 		Collection<String> townNames = new HashSet<>();
 		for (String s : getTowns().keySet())
 			townNames.add(s.toLowerCase());
@@ -99,6 +113,30 @@ public class TownManager {
 			if (t.getMayor().equals(owner) || t.getResidents().contains(owner))
 				return false;
 		}
+
+		Town town;
+		try {
+			town = new Town(owner, chunk, name);
+		} catch (PlotAlreadyExistsException e) {
+			Bukkit.getLogger().info(String.format("A plot was to be claimed at [%s, %s], but was unable to do so!", e.getChunk().getX(), e.getChunk().getZ()));
+			Bukkit.getLogger().info(String.format("Reason: %s", e.getFailReason().toString()));
+			return false;
+		}
+
+		float cost = TheNewTown.getInstance().getCreationCost();
+
+		EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(owner), cost);
+		Player p = Bukkit.getPlayer(owner);
+		if (!response.transactionSuccess()) {
+			if (p != null)
+				p.sendMessage(ChatColor.RED + String.format("Insufficient funds to create town! Funds required: %s", cost));
+			return false;
+		} else {
+			if (p != null)
+				p.sendMessage(ChatColor.GREEN + String.format("%s has been charged to your account!", cost));
+		}
+
+		town.save();
 
 		getTowns().put(name, town);
 
@@ -163,6 +201,14 @@ public class TownManager {
 		float p = (float) getTaxablePlots(town);
 
 		return town.getTownType().getFlatCost() + (town.getTownType().getPlotCost() * p);
+	}
+
+	public Town getTownOfPlayer(UUID id) {
+		for (Town town : getTowns().values()) {
+			if (town.getResidents().contains(id))
+				return town;
+		}
+		return null;
 	}
 
 	public int getUpkeepPeriod() {
