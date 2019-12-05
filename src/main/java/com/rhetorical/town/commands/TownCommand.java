@@ -105,7 +105,7 @@ public class TownCommand {
 
 			sender.sendMessage(String.format(pageHeader, page, pages));
 
-			for (int i = (page - 1) * messagesPerPage; i < roof && i < CommandData.values().length; i++) {
+			for (int i = (page - 1) * messagesPerPage + 1; i < roof && i < CommandData.values().length; i++) {
 				if (hasPermission(sender, messages[i].getPermission()))
 					sender.sendMessage(messages[i].getMessage());
 				else

@@ -4,12 +4,14 @@ import com.rhetorical.town.towns.flags.TownFlag;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
@@ -32,12 +34,44 @@ class PlotListener implements Listener {
 
 	@EventHandler
 	public void onPlayerEnterExitPlot(PlayerMoveEvent e) {
-		//Entering
+		if (e.getFrom().getChunk().equals(e.getTo().getChunk()))
+			return;
+
+//		if (getPlot().isInPlot(e.getTo())) {
+//			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
+//			if (owner.isChunkClaimed(e.getTo().getChunk())) {
+//				Plot to = owner.getPlot(e.getTo().getChunk());
+//				if (to.getLeaser() != null) {
+//					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
+//					return;
+//				} else if (to.isForSale()) {
+//					e.getPlayer().sendMessage(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost()));
+//					return;
+//				}
+//			}
+//		}
+		// Entering
 		if (getPlot().isInPlot(e.getTo()) && !getPlot().isInPlot(e.getFrom())) {
 			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
-			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk()))
+			Plot to = owner.getPlot(e.getTo().getChunk());
+			if (to.getLeaser() != null) {
+				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
 				return;
-			e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s", getPlot().getTown())));
+			} else if (to.isForSale()) {
+				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost())));
+				return;
+			}
+			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk())) {
+				if (to.getLeaser() != null) {
+					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
+					return;
+				} else if (to.isForSale()) {
+					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost())));
+					return;
+				}
+			} else {
+				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s", getPlot().getTown())));
+			}
 		}
 		//Leaving
 		else if (!getPlot().isInPlot(e.getTo()) && getPlot().isInPlot(e.getFrom())) {
@@ -172,16 +206,11 @@ class PlotListener implements Listener {
 	}
 
 	@EventHandler
-	public void onDropEvent(EntityDropItemEvent e) {
-		if (!(e.getEntity() instanceof Player))
+	public void onDropEvent(PlayerDropItemEvent e) {
+		if (!getPlot().isInPlot(e.getPlayer().getLocation()) && !getPlot().isInPlot(e.getItemDrop().getLocation()))
 			return;
 
-		Player p = (Player) e.getEntity();
-
-		if (!getPlot().isInPlot(p.getLocation()) && !getPlot().isInPlot(e.getItemDrop().getLocation()))
-			return;
-
-		if (!p.getUniqueId().equals(getPlot().getLeaser()) && !p.getUniqueId().equals(getPlot().getOwner())) {
+		if (!e.getPlayer().getUniqueId().equals(getPlot().getLeaser()) && !e.getPlayer().getUniqueId().equals(getPlot().getOwner())) {
 			if (!getPlot().getFlag(TownFlag.ALLOW_DROP))
 				e.setCancelled(true);
 		}

@@ -3,6 +3,7 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.util.WorldGuardUtil;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -71,6 +72,10 @@ public class Town {
 				boolean v = file.getData().getBoolean(getFlags()  + ".flags." + key);
 				setFlag(flag, v);
 			}
+
+		for (TownFlag flag : TownFlag.values())
+			if (!getFlags().containsKey(flag))
+				getFlags().put(flag, flag.getDefaultValue());
 
 	}
 
@@ -183,7 +188,8 @@ public class Town {
 		if (TownManager.getInstance().isChunkClaimed(chunk))
 			return false;
 
-		//todo: world guard checks to make sure plot doesn't overlap region
+		if(WorldGuardUtil.getInstance().overlapsRegion(chunk))
+			return false;
 
 		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName(), new HashMap<>());
 		getPlots().add(plot);

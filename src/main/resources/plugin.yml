@@ -4,6 +4,7 @@ version: 1.0.0
 main: com.rhetorical.town.TheNewTown
 api-version: 1.13
 depend: [Vault]
+softdepend: [WorldGuard]
 commands:
   t:
     usage: /<command> [...]
