@@ -84,6 +84,9 @@ public class Town {
 		residents.add(mayor);
 		setName(name);
 		setTownType(TownType.HAMLET);
+		for (TownFlag flag : TownFlag.values()) {
+			setFlag(flag, flag.getDefaultValue());
+		}
 		if (!addPlot(initial)) {
 			PlotAlreadyExistsException.FailReason reason;
 			if (!TownManager.getInstance().isChunkClaimed(initial))
@@ -356,10 +359,6 @@ public class Town {
 
 	public void setFlag(TownFlag flag, boolean value) {
 		flags.put(flag, value);
-	}
-
-	public boolean removeFlag(TownFlag flag) {
-		return flags.remove(flag);
 	}
 
 }

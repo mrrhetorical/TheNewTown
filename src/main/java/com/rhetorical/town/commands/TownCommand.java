@@ -4,7 +4,9 @@ import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.towns.Plot;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
+import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
+import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,7 +30,7 @@ public class TownCommand {
 		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
 		Buy("/t lease (release) - Leases the current plot from the town or releases lease.", "tnt.lease"), // done
-		Flag("/t flag [plot/town] [flag] [true/false] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
+		Flag("/t flag [plot/town] [flag] [true/false/clear] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
 		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"), // done
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
@@ -713,6 +715,104 @@ public class TownCommand {
 				p.sendMessage(ChatColor.GREEN + "Successfully began lease agreement!");
 				return;
 			}
+		}
+		else if (args[0].equalsIgnoreCase("flag")) {
+			if (!checkPerm(sender, CommandData.Flag))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			if (args.length != 4) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t flag [plot/town] [flag] [true/false/clear]");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to set it's flags!");
+				return;
+			}
+
+
+			boolean isTown;
+
+			if (args[1].equalsIgnoreCase("plot"))
+				isTown = false;
+			else if (args[1].equalsIgnoreCase("town"))
+				isTown = true;
+			else {
+				p.sendMessage(ChatColor.RED + "Please specify if the flag should be for the town or the plot!");
+				return;
+			}
+
+			TownFlag flag;
+
+			try {
+				flag = TownFlag.valueOf(args[2].toUpperCase());
+			} catch (Exception e) {
+				p.sendMessage(ChatColor.RED + "Please enter a valid flag! Valid flags are no_pvp, allow_modification, allow_pickup, allow_drop, mob_spawning, fire_tick, lava_flow, water_flow, animal_abuse, and alien_interact.");
+				return;
+			}
+
+			if (!isTown) {
+				if (!town.isChunkClaimed(p.getLocation().getChunk())) {
+					p.sendMessage(ChatColor.RED + "You can't set flags for a plot your town does not own!");
+					return;
+				}
+
+				Plot plot = town.getPlot(p.getLocation().getChunk());
+
+				if (!p.getUniqueId().equals(plot.getLeaser()) && !town.getMayor().equals(p.getUniqueId())) {
+					p.sendMessage(ChatColor.RED + "You must be the town mayor or leasing the plot to change the flags of it!");
+					return;
+				}
+
+				if (args[3].equalsIgnoreCase("clear")) {
+					plot.removeFlag(flag);
+					town.save();
+					p.sendMessage(ChatColor.GREEN + "Successfully cleared flag from plot!");
+					return;
+				} else {
+					boolean value;
+					try {
+						value = Boolean.parseBoolean(args[3]);
+					} catch (Exception e) {
+						p.sendMessage(ChatColor.RED + "For the flag value, please enter either 'true', 'false', or 'clear'!");
+						return;
+					}
+
+					plot.setFlag(flag, value);
+					town.save();
+					p.sendMessage(ChatColor.GREEN + "Successfully set flag for plot!");
+					return;
+				}
+			} else {
+				if (!town.getMayor().equals(p.getUniqueId())) {
+					p.sendMessage(ChatColor.RED + "You must be the town mayor flags of the town!");
+					return;
+				}
+
+				boolean value;
+				try {
+					value = Boolean.parseBoolean(args[3]);
+				} catch (Exception e) {
+					p.sendMessage(ChatColor.RED + "For the flag value, please enter either 'true' or 'false'!");
+					return;
+				}
+
+				town.setFlag(flag, value);
+				town.save();
+				p.sendMessage(ChatColor.GREEN + "Successfully set flag for town!");
+				return;
+			}
+		} else {
+			sender.sendMessage(ChatColor.RED + "Invalid command!" + (checkPerm(sender, CommandData.Help) ? " Try using /t help for more info!" : ""));
+			return;
 		}
 	}
 
