@@ -30,7 +30,7 @@ public class TownCommand {
 		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
 		Buy("/t lease (release) - Leases the current plot from the town or releases lease.", "tnt.lease"), // done
-		Flag("/t flag [plot/town] [flag] [true/false/clear] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
+		Flag("/t flag [plot/town] [flag] [true/false/clear] - Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
 		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"), // done
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
