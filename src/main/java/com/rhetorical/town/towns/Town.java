@@ -2,6 +2,7 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import com.rhetorical.town.towns.flags.TownFlag;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -10,9 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Town {
 
@@ -29,6 +28,8 @@ public class Town {
 
 	private LocalDateTime lastTaxPeriod;
 	private LocalDateTime lastUpkeepPeriod;
+
+	private Map<TownFlag, Boolean> flags = new HashMap<>();
 
 	/**
 	 * Used in town loading.
@@ -58,6 +59,19 @@ public class Town {
 
 		lastTaxPeriod = converter.fromString(file.getData().getString(getName() + ".lastTaxPeriod"));
 		lastUpkeepPeriod = converter.fromString(file.getData().getString(getName() + ".lastUpkeepPeriod"));
+
+		ConfigurationSection f = file.getData().getConfigurationSection(getName() + ".flags");
+		if (f != null)
+			for (String key : f.getKeys(false)) {
+				TownFlag flag;
+				try {
+					flag = TownFlag.valueOf(key.toUpperCase());
+				} catch (Exception ignored) { continue; }
+
+				boolean v = file.getData().getBoolean(getFlags()  + ".flags." + key);
+				setFlag(flag, v);
+			}
+
 	}
 
 	/**
@@ -120,6 +134,9 @@ public class Town {
 
 		file.getData().set(getName() + ".plots", null);
 
+		for (TownFlag flag : getFlags().keySet())
+			file.getData().set(getName() + ".flags." + flag.toString().toLowerCase(), getFlags().get(flag));
+
 		for (Plot plot : getPlots()) {
 			plot.save(getName(), file);
 		}
@@ -165,7 +182,7 @@ public class Town {
 
 		//todo: world guard checks to make sure plot doesn't overlap region
 
-		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName());
+		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName(), new HashMap<>());
 		getPlots().add(plot);
 
 		if (getTownType() == null)
@@ -331,6 +348,18 @@ public class Town {
 			return TownType.VILLAGE;
 		else
 			return TownType.HAMLET;
+	}
+
+	public Map<TownFlag, Boolean> getFlags() {
+		return flags;
+	}
+
+	public void setFlag(TownFlag flag, boolean value) {
+		flags.put(flag, value);
+	}
+
+	public boolean removeFlag(TownFlag flag) {
+		return flags.remove(flag);
 	}
 
 }

@@ -2,13 +2,17 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import com.rhetorical.town.towns.flags.TownFlag;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class Plot {
@@ -27,8 +31,10 @@ public class Plot {
 
 	private final PlotListener plotListener;
 
+	private Map<TownFlag, Boolean> flags;
 
-	Plot(long id, UUID owner, UUID leaser, Chunk chunk, boolean forSale, float cost, String town) {
+
+	Plot(long id, UUID owner, UUID leaser, Chunk chunk, boolean forSale, float cost, String town, Map<TownFlag, Boolean> flags) {
 		this.id = id;
 		setOwner(owner);
 		setLeaser(leaser);
@@ -36,6 +42,7 @@ public class Plot {
 		setForSale(forSale);
 		setCost(cost);
 		setTown(town);
+		this.flags = flags;
 
 		plotListener = new PlotListener(this);
 		Bukkit.getPluginManager().registerEvents(plotListener, TheNewTown.getInstance());
@@ -126,6 +133,13 @@ public class Plot {
 		file.getData().set(base + ".leaser", getLeaser() != null ? getLeaser().toString() : "none");
 		file.getData().set(base + ".forSale", isForSale());
 		file.getData().set(base + ".cost", getCost());
+
+		if (getFlags().isEmpty())
+			file.getData().set(base + ".flags", null);
+		else
+			for (TownFlag flag : getFlags().keySet())
+				file.getData().set(base + ".flags." + flag.toString().toLowerCase(), getFlags().get(flag));
+
 		file.saveData();
 	}
 
@@ -146,18 +160,6 @@ public class Plot {
 			setLeaser(null);
 
 		return collected;
-	}
-
-	boolean tryLeasePlot(UUID renter) {
-		EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(renter), getCost());
-
-		if (response.transactionSuccess()) {
-			setLeaser(renter);
-			EconomyResponse r = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(getOwner()), getCost());
-			return true;
-		}
-
-		return false;
 	}
 
 	static Plot loadPlot(String town, long id, TownFile file) {
@@ -182,8 +184,34 @@ public class Plot {
 
 		Chunk chunk = world.getChunkAt(x, z);
 
+		Map<TownFlag, Boolean> townFlags = new HashMap<>();
 
-		return new Plot(id, owner, leaser, chunk, fs, cost, town);
+		ConfigurationSection f = file.getData().getConfigurationSection(town + ".plots." + id + ".flags");
+		if (f != null)
+			for (String key : f.getKeys(false)) {
+				TownFlag flag;
+				try {
+					flag = TownFlag.valueOf(key.toUpperCase());
+				} catch (Exception ignored) { continue; }
+
+				boolean v = file.getData().getBoolean(town  + ".plots." + id + ".flags." + key);
+				townFlags.put(flag, v);
+			}
+
+
+		return new Plot(id, owner, leaser, chunk, fs, cost, town, townFlags);
+	}
+
+	public Map<TownFlag, Boolean> getFlags() {
+		return flags;
+	}
+
+	public void setFlag(TownFlag flag, boolean value) {
+		flags.put(flag, value);
+	}
+
+	public boolean removeFlag(TownFlag flag) {
+		return flags.remove(flag);
 	}
 
 
