@@ -1,8 +1,11 @@
 package com.rhetorical.town.commands;
 
+import com.rhetorical.town.TheNewTown;
+import com.rhetorical.town.towns.Plot;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
 import com.rhetorical.town.towns.invite.InviteManager;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -23,10 +26,10 @@ public class TownCommand {
 		Invite("/t invite [player] - Invites the given player to your town. (m)", "tnt.invite"), // done
 		Claim("/t claim - Claims the plot you're standing in for your town. (m)", "tnt.claim"), // done
 		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
-		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"),
-		Buy("/t lease - Leases the current plot from the town.", "tnt.lease"),
+		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
+		Buy("/t lease (release) - Leases the current plot from the town or releases lease.", "tnt.lease"), // done
 		Flag("/t flag [plot/town] [flag] [true/false] - Sets the flag for the given plot or town. (m)", "tnt.flag"),
-		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"),
+		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"), // done
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
 		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
@@ -217,6 +220,11 @@ public class TownCommand {
 				return;
 			}
 
+			if (!town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be a mayor to do that!");
+				return;
+			}
+
 			Chunk chunk = p.getLocation().getChunk();
 
 			if (TownManager.getInstance().isChunkClaimed(chunk)) {
@@ -251,12 +259,19 @@ public class TownCommand {
 				return;
 			}
 
+			if (!town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be a mayor to do that!");
+				return;
+			}
+
+
 			Chunk chunk = p.getLocation().getChunk();
 
 			if (!town.isChunkClaimed(chunk)) {
 				p.sendMessage(ChatColor.RED + "That chunk is not claimed by your town!");
 				return;
 			}
+
 
 			if (town.removePlot(chunk)) {
 				p.sendMessage(ChatColor.GREEN + "Successfully unclaimed plot for your town!");
@@ -532,6 +547,172 @@ public class TownCommand {
 			town.save();
 			p.sendMessage(ChatColor.GREEN + "Successfully changed your town's tax rate!");
 			return;
+		}
+		else if (args[0].equalsIgnoreCase("sell")) {
+			if (!checkPerm(sender, CommandData.Sell))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t sell [cost/-1]");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null || !town.isChunkClaimed(p.getLocation().getChunk())) {
+				p.sendMessage(ChatColor.RED + "You can't sell a plot you don't own!");
+				return;
+			}
+
+			if (!town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be a mayor to sell plots!");
+				return;
+			}
+
+			Plot plot = town.getPlot(p.getLocation().getChunk());
+
+			float cost;
+
+			try {
+				cost = Float.parseFloat(args[1]);
+			} catch (Exception e) {
+				sender.sendMessage(ChatColor.RED + "Invalid cost!");
+				return;
+			}
+
+			if (cost < 0f && cost != -1) {
+				p.sendMessage(ChatColor.RED + "Cost cannot be below 0!");
+				return;
+			}
+
+
+			if (plot.getLeaser() != null) {
+				if (cost != -1f) {
+					p.sendMessage(ChatColor.RED + "Cannot change price of plot while player is leasing!");
+					return;
+				} else {
+					plot.setForSale(false);
+					plot.setCost(0f);
+					town.save();
+					p.sendMessage(ChatColor.YELLOW + "Plot has been removed from sale. The player currently leasing will have access until the end of the tax period.");
+					return;
+				}
+			} else {
+				if (cost == -1) {
+					plot.setForSale(false);
+					plot.setCost(0f);
+					town.save();
+					p.sendMessage(ChatColor.GREEN + "Plot has been removed from sale.");
+					return;
+				} else {
+					plot.setForSale(true);
+					plot.setCost(cost);
+					town.save();
+					p.sendMessage(ChatColor.GREEN + String.format("This plot is now going for sale at $%s!", plot.getCost()));
+					return;
+				}
+			}
+		}
+		else if (args[0].equalsIgnoreCase("lease")) {
+			if (!checkPerm(sender, CommandData.Buy))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to lease plots!");
+				return;
+			}
+
+			if (town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You cannot lease plots as the town mayor!");
+				return;
+			}
+
+			if (!town.isChunkClaimed(p.getLocation().getChunk())) {
+				p.sendMessage(ChatColor.RED + "Your town does not own this plot!");
+				return;
+			}
+
+			Plot plot = town.getPlot(p.getLocation().getChunk());
+
+			if (plot.getLeaser() != null) {
+				if (plot.isForSale()) {
+					if (plot.getLeaser().equals(p.getUniqueId())) {
+
+						if (args.length != 2) {
+							p.sendMessage(ChatColor.RED + "You already are leasing this plot!");
+							return;
+						}
+
+						if (!args[1].equalsIgnoreCase("release")) {
+							p.sendMessage(ChatColor.RED + "Improper usage! Proper usage: /t lease release");
+							return;
+						}
+
+						plot.setLeaser(null);
+						town.save();
+						EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(p.getUniqueId()), plot.getCost());
+						if (response.transactionSuccess()) {
+							p.sendMessage(ChatColor.YELLOW + String.format("Successfully paid remaining $%s due!", plot.getCost()));
+							TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(town.getMayor()), plot.getCost());
+						} else
+							p.sendMessage(ChatColor.RED + String.format("Could not pay remaining $%s due!", plot.getCost()));
+
+						p.sendMessage(ChatColor.GREEN + "Successfully released lease agreement!");
+						return;
+					} else {
+						p.sendMessage(ChatColor.RED + "Someone else is already leasing this plot!");
+						return;
+					}
+				} else {
+					if (!plot.getLeaser().equals(p.getUniqueId()))
+						p.sendMessage(ChatColor.RED + "This plot is not for sale!");
+					else {
+						if (!args[1].equalsIgnoreCase("release")) {
+							p.sendMessage(ChatColor.RED + "Improper usage! Proper usage: /t lease release");
+							return;
+						}
+
+						plot.setLeaser(null);
+						town.save();
+						p.sendMessage(ChatColor.GREEN + "Successfully released lease agreement!");
+						return;
+					}
+				}
+			} else {
+				if (!plot.isForSale()) {
+					p.sendMessage(ChatColor.RED + "This plot is not for sale!");
+					return;
+				}
+
+				EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(p.getUniqueId()), plot.getCost());
+				if (!response.transactionSuccess()) {
+					p.sendMessage(ChatColor.RED + String.format("Could not pay $%s required to lease plot!", plot.getCost()));
+					return;
+				}
+
+				TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(plot.getOwner()), plot.getCost());
+
+				plot.setLeaser(p.getUniqueId());
+				town.save();
+
+				p.sendMessage(ChatColor.GREEN + "Successfully began lease agreement!");
+				return;
+			}
 		}
 	}
 
