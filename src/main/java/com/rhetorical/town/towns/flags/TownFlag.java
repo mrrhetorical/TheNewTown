@@ -10,4 +10,5 @@ public enum TownFlag {
 	LAVA_FLOW, // Disables lava flow in the chunk (default: true)
 	WATER_FLOW, // Disables water flow in the chunk (default: false)
 	ANIMAL_ABUSE, // Disables animal abuse against friendly animals (default: false)
+	ALIEN_INTERACT, // Should non-residents be able to interact with items within the town? (default: false)
 }

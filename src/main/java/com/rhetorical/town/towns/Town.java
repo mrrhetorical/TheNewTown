@@ -52,7 +52,7 @@ public class Town {
 			getResidents().add(player);
 		}
 
-		tax = (float) file.getData().getDouble(name + ".tax");
+		setTax((float) file.getData().getDouble(name + ".tax"));
 
 		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
 

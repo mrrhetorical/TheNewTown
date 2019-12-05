@@ -475,13 +475,62 @@ public class TownCommand {
 			sender.sendMessage(String.format("Mayor: %s", Bukkit.getOfflinePlayer(town.getMayor()).getName()));
 			sender.sendMessage(String.format("Size: %s (%s)", town.getTownType().getReadable(), town.getPlots().size()));
 			sender.sendMessage(String.format("Residents: %s", town.getResidents().size()));
-			float tax = (town.getTax() / ((float) TownManager.getInstance().getTaxPeriod()) / 24f);
-			tax = ((int) ((tax + 0.005f) * 100)) / 100f;
-			sender.sendMessage(String.format("Taxes: $%s/day", tax));
-			float upkeep = (TownManager.getInstance().getUpkeep(town) / ((float) TownManager.getInstance().getUpkeepPeriod() / 24f));
+			float dailyTax = town.getTax() * (24f / (float) TownManager.getInstance().getTaxPeriod());
+			dailyTax = ((int) ((dailyTax + 0.005f) * 100)) / 100f;
+			sender.sendMessage(String.format("Taxes: $%s/day", dailyTax));
+			float upkeep = TownManager.getInstance().getUpkeep(town) * (24f / (float) TownManager.getInstance().getUpkeepPeriod());
 			upkeep = ((int) ((upkeep + 0.005f) * 100)) / 100f;
 			sender.sendMessage(String.format("Upkeep: $%s/day", upkeep));
+			return;
+		}
+		else if (args[0].equalsIgnoreCase("tax")) {
+			if (!checkPerm(sender, CommandData.Tax))
+				return;
 
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t tax [amount]");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You can't do that because you don't belong to a town!");
+				return;
+			}
+
+			if (!town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be a mayor to set the tax rate!");
+				return;
+			}
+
+			float amount;
+			String a = args[1];
+
+			try {
+				amount = Float.parseFloat(a);
+			} catch (Exception e) {
+				p.sendMessage(ChatColor.RED + "Invalid tax amount!");
+				return;
+			}
+
+			if (amount < 0f) {
+				p.sendMessage(ChatColor.RED + "You can't have a negative tax rate!");
+				return;
+			} else if (amount > TownManager.getInstance().getUpkeep(town)) {
+				p.sendMessage(ChatColor.RED + "You can't set a tax rate that's higher than your upkeep!");
+				return;
+			}
+
+			town.setTax(amount);
+			town.save();
+			p.sendMessage(ChatColor.GREEN + "Successfully changed your town's tax rate!");
 			return;
 		}
 	}
