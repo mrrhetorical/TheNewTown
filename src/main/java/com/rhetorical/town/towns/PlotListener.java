@@ -37,19 +37,6 @@ class PlotListener implements Listener {
 		if (e.getFrom().getChunk().equals(e.getTo().getChunk()))
 			return;
 
-//		if (getPlot().isInPlot(e.getTo())) {
-//			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
-//			if (owner.isChunkClaimed(e.getTo().getChunk())) {
-//				Plot to = owner.getPlot(e.getTo().getChunk());
-//				if (to.getLeaser() != null) {
-//					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
-//					return;
-//				} else if (to.isForSale()) {
-//					e.getPlayer().sendMessage(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost()));
-//					return;
-//				}
-//			}
-//		}
 		// Entering
 		if (getPlot().isInPlot(e.getTo()) && !getPlot().isInPlot(e.getFrom())) {
 			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
@@ -90,6 +77,9 @@ class PlotListener implements Listener {
 		if (!getPlot().isInPlot(e.getBlock().getLocation()))
 			return;
 
+		if (e.getPlayer().hasPermission("tnt.admin") || e.getPlayer().isOp())
+			return;
+
 		Town town = TownManager.getInstance().getTown(plot.getTown());
 
 		if (!town.getResidents().contains(e.getPlayer().getUniqueId())) {
@@ -107,6 +97,9 @@ class PlotListener implements Listener {
 	@EventHandler
 	public void onPlayerPlaceBlockEvent(BlockPlaceEvent e) {
 		if (!getPlot().isInPlot(e.getBlock().getLocation()))
+			return;
+
+		if (e.getPlayer().hasPermission("tnt.admin") || e.getPlayer().isOp())
 			return;
 
 		Town town = TownManager.getInstance().getTown(plot.getTown());
@@ -127,6 +120,9 @@ class PlotListener implements Listener {
 	@EventHandler
 	public void onPlayerInteractEvent(PlayerInteractEvent e) {
 		if (e.getAction() != Action.RIGHT_CLICK_BLOCK && e.getAction() != Action.LEFT_CLICK_BLOCK)
+			return;
+
+		if (e.getPlayer().hasPermission("tnt.admin") || e.getPlayer().isOp())
 			return;
 
 		if (e.getClickedBlock() == null)
@@ -196,6 +192,9 @@ class PlotListener implements Listener {
 
 		Player p = (Player) e.getEntity();
 
+		if (p.hasPermission("tnt.admin") || p.isOp())
+			return;
+
 		if (!getPlot().isInPlot(p.getLocation()) && !getPlot().isInPlot(e.getItem().getLocation()))
 			return;
 
@@ -208,6 +207,9 @@ class PlotListener implements Listener {
 	@EventHandler
 	public void onDropEvent(PlayerDropItemEvent e) {
 		if (!getPlot().isInPlot(e.getPlayer().getLocation()) && !getPlot().isInPlot(e.getItemDrop().getLocation()))
+			return;
+
+		if (e.getPlayer().hasPermission("tnt.admin") || e.getPlayer().isOp())
 			return;
 
 		if (!e.getPlayer().getUniqueId().equals(getPlot().getLeaser()) && !e.getPlayer().getUniqueId().equals(getPlot().getOwner())) {
@@ -228,6 +230,9 @@ class PlotListener implements Listener {
 			return;
 
 		Player p = (Player) e.getDamager();
+
+		if (p.hasPermission("tnt.admin") || p.isOp())
+			return;
 
 		if (!p.getUniqueId().equals(getPlot().getLeaser()) && !p.getUniqueId().equals(getPlot().getOwner())) {
 			if (!getPlot().getFlag(TownFlag.ANIMAL_ABUSE))
