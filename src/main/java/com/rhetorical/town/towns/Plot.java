@@ -214,7 +214,7 @@ public class Plot {
 		if (getFlags().containsKey(flag))
 			return getFlags().get(flag);
 
-		return TownManager.getInstance().getTown(getTown()).getFlags().get(flag);
+		return TownManager.getInstance().getTown(getTown()).getFlag(flag);
 	}
 
 	public boolean removeFlag(TownFlag flag) {

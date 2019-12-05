@@ -31,6 +31,7 @@ public class TownCommand {
 		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
 		Buy("/t lease (release) - Leases the current plot from the town or releases lease.", "tnt.lease"), // done
 		Flag("/t flag [plot/town] [flag] [true/false/clear] - Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
+		Flags("/t flags [name] - Tells you the current flags of the given town, or plot if the town name isn't there.", "tnt.flag"),
 		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"), // done
 		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
@@ -381,7 +382,7 @@ public class TownCommand {
 				sender.sendMessage(ChatColor.RED + "Could not join that town! You require an invite to join towns!");
 				return;
 			} else {
-				sender.sendMessage(ChatColor.GREEN + "Successfully joined town!");
+				sender.sendMessage(ChatColor.GREEN + String.format("Successfully joined the town %s!", town.getName()));
 				town.save();
 				return;
 			}
@@ -725,16 +726,16 @@ public class TownCommand {
 				return;
 			}
 
-			if (args.length != 4) {
-				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t flag [plot/town] [flag] [true/false/clear]");
-				return;
-			}
-
 			Player p = (Player) sender;
 
 			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
 			if (town == null) {
 				p.sendMessage(ChatColor.RED + "You must belong to a town to set it's flags!");
+				return;
+			}
+
+			if (args.length < 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t flag [plot/town] [flag] [true/false/clear]");
 				return;
 			}
 
@@ -750,6 +751,11 @@ public class TownCommand {
 				return;
 			}
 
+			if (args.length == 2) {
+				p.sendMessage(ChatColor.RED + "Please enter a valid flag! Valid flags are no_pvp, allow_modification, allow_pickup, allow_drop, mob_spawning, fire_tick, lava_flow, water_flow, animal_abuse, and alien_interact.");
+				return;
+			}
+
 			TownFlag flag;
 
 			try {
@@ -758,6 +764,12 @@ public class TownCommand {
 				p.sendMessage(ChatColor.RED + "Please enter a valid flag! Valid flags are no_pvp, allow_modification, allow_pickup, allow_drop, mob_spawning, fire_tick, lava_flow, water_flow, animal_abuse, and alien_interact.");
 				return;
 			}
+
+			if (args.length != 4) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t flag [plot/town] [flag] [true/false/clear]");
+				return;
+			}
+
 
 			if (!isTown) {
 				if (!town.isChunkClaimed(p.getLocation().getChunk())) {
@@ -810,7 +822,52 @@ public class TownCommand {
 				p.sendMessage(ChatColor.GREEN + "Successfully set flag for town!");
 				return;
 			}
-		} else {
+		}
+		else if (args[0].equalsIgnoreCase("flags")) {
+			if (!checkPerm(sender, CommandData.Flags))
+				return;
+
+			if (args.length != 2) {
+				if (!(sender instanceof Player)) {
+					sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+					return;
+				}
+
+				Player p = (Player) sender;
+
+				Town town = TownManager.getInstance().getTown(p.getLocation().getChunk());
+				if (town == null) {
+					p.sendMessage(ChatColor.RED + "No town has claimed this chunk!");
+					return;
+				}
+
+				Plot plot = town.getPlot(p.getLocation().getChunk());
+				if (plot == null) {
+					p.sendMessage(ChatColor.RED + "ERROR");
+					return;
+				}
+
+				sender.sendMessage("##### [Plot Flags] #####");
+				for (TownFlag flag : plot.getFlags().keySet()) {
+					sender.sendMessage(flag.toString().toLowerCase() + ": " + (plot.getFlag(flag) ? ChatColor.GREEN : ChatColor.RED) + plot.getFlag(flag));
+				}
+				return;
+			}
+
+			String tName = args[1];
+			Town town = TownManager.getInstance().getTown(tName);
+			if (town == null) {
+				sender.sendMessage(ChatColor.RED + "No such town exists with that name!");
+				return;
+			}
+
+			sender.sendMessage(String.format("##### [Town %s Flags] #####", town.getName()));
+			for (TownFlag flag : town.getFlags().keySet()) {
+				sender.sendMessage(flag.toString().toLowerCase() + ": " + (town.getFlag(flag) ? ChatColor.GREEN : ChatColor.RED) + town.getFlag(flag));
+			}
+			return;
+		}
+		else {
 			sender.sendMessage(ChatColor.RED + "Invalid command!" + (checkPerm(sender, CommandData.Help) ? " Try using /t help for more info!" : ""));
 			return;
 		}

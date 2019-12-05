@@ -357,8 +357,15 @@ public class Town {
 		return flags;
 	}
 
+	public boolean getFlag(TownFlag flag) {
+		if (!getFlags().containsKey(flag))
+			getFlags().put(flag, flag.getDefaultValue());
+
+		return getFlags().get(flag);
+	}
+
 	public void setFlag(TownFlag flag, boolean value) {
-		flags.put(flag, value);
+		getFlags().put(flag, value);
 	}
 
 }

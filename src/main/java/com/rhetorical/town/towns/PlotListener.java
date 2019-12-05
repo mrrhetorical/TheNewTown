@@ -119,7 +119,7 @@ class PlotListener implements Listener {
 	public void onPlayerDamagePlayer(EntityDamageByEntityEvent e) {
 		Player damager, victim;
 
-		if (!(e.getDamager() instanceof Player) && !(e.getEntity() instanceof Player)) {
+		if (!(e.getDamager() instanceof Player)) {
 			if (e.getDamager() instanceof Projectile) {
 				Projectile projectile = (Projectile) e.getDamager();
 				if (!(projectile.getShooter() instanceof Player))
@@ -130,6 +130,9 @@ class PlotListener implements Listener {
 		} else {
 			damager = (Player) e.getDamager();
 		}
+
+		if (!(e.getEntity() instanceof Player))
+				return;
 
 		victim = (Player) e.getEntity();
 
@@ -165,7 +168,6 @@ class PlotListener implements Listener {
 		if (!p.getUniqueId().equals(getPlot().getLeaser()) && !p.getUniqueId().equals(getPlot().getOwner())) {
 			if (!getPlot().getFlag(TownFlag.ALLOW_PICKUP))
 				e.setCancelled(true);
-			return;
 		}
 	}
 
@@ -182,7 +184,6 @@ class PlotListener implements Listener {
 		if (!p.getUniqueId().equals(getPlot().getLeaser()) && !p.getUniqueId().equals(getPlot().getOwner())) {
 			if (!getPlot().getFlag(TownFlag.ALLOW_DROP))
 				e.setCancelled(true);
-			return;
 		}
 	}
 
@@ -207,15 +208,51 @@ class PlotListener implements Listener {
 	}
 
 	@EventHandler
-	public void onMobSpawn(EntitySpawnEvent e) {
-		if (!(e instanceof Monster))
+	public void onMobSpawn(CreatureSpawnEvent e) {
+		if (e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL && e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NETHER_PORTAL)
 			return;
 
 		if (!getPlot().isInPlot(e.getLocation()))
 			return;
 
-		if (!getPlot().getFlag(TownFlag.MOB_SPAWNING))
+		if (e.getEntity() instanceof Monster)
+			if (!getPlot().getFlag(TownFlag.MOB_SPAWNING))
+				e.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onLiquidSpread(BlockFromToEvent e) {
+		if (!getPlot().isInPlot(e.getBlock().getLocation()))
+			return;
+
+		if (!e.getBlock().isLiquid())
+			return;
+
+		if (e.getBlock().getType() == Material.WATER)
+			if (!getPlot().getFlag(TownFlag.WATER_FLOW))
+				e.setCancelled(true);
+		else if (e.getBlock().getType() == Material.LAVA)
+			if (!getPlot().getFlag(TownFlag.LAVA_FLOW))
+				e.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onFireSpread(BlockIgniteEvent e) {
+		if (!getPlot().isInPlot(e.getBlock().getLocation()))
+			return;
+
+		if (!getPlot().getFlag(TownFlag.FIRE_TICK))
 			e.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onFireSpread(BlockSpreadEvent e) {
+		if (!getPlot().isInPlot(e.getBlock().getLocation()))
+			return;
+
+		if(e.getBlock().getType() == Material.FIRE)
+			if (!getPlot().getFlag(TownFlag.FIRE_TICK))
+				e.setCancelled(true);
 	}
 
 }
