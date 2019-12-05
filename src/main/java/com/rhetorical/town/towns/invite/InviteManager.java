@@ -85,7 +85,8 @@ public class InviteManager {
 		BukkitRunnable br = new BukkitRunnable() {
 			@Override
 			public void run() {
-				getActiveRequests().remove(request);
+				if (!getActiveRequests().remove(request))
+					return;
 				Player requester = Bukkit.getPlayer(request.getRequester()),
 						recipient = Bukkit.getPlayer(request.getRecipient());
 

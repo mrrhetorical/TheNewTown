@@ -2,6 +2,8 @@ package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
+import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.util.WorldGuardUtil;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -10,9 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Town {
 
@@ -29,6 +29,8 @@ public class Town {
 
 	private LocalDateTime lastTaxPeriod;
 	private LocalDateTime lastUpkeepPeriod;
+
+	private Map<TownFlag, Boolean> flags = new HashMap<>();
 
 	/**
 	 * Used in town loading.
@@ -58,6 +60,23 @@ public class Town {
 
 		lastTaxPeriod = converter.fromString(file.getData().getString(getName() + ".lastTaxPeriod"));
 		lastUpkeepPeriod = converter.fromString(file.getData().getString(getName() + ".lastUpkeepPeriod"));
+
+		ConfigurationSection f = file.getData().getConfigurationSection(getName() + ".flags");
+		if (f != null)
+			for (String key : f.getKeys(false)) {
+				TownFlag flag;
+				try {
+					flag = TownFlag.valueOf(key.toUpperCase());
+				} catch (Exception ignored) { continue; }
+
+				boolean v = file.getData().getBoolean(getFlags()  + ".flags." + key);
+				setFlag(flag, v);
+			}
+
+		for (TownFlag flag : TownFlag.values())
+			if (!getFlags().containsKey(flag))
+				getFlags().put(flag, flag.getDefaultValue());
+
 	}
 
 	/**
@@ -70,6 +89,9 @@ public class Town {
 		residents.add(mayor);
 		setName(name);
 		setTownType(TownType.HAMLET);
+		for (TownFlag flag : TownFlag.values()) {
+			setFlag(flag, flag.getDefaultValue());
+		}
 		if (!addPlot(initial)) {
 			PlotAlreadyExistsException.FailReason reason;
 			if (!TownManager.getInstance().isChunkClaimed(initial))
@@ -120,6 +142,9 @@ public class Town {
 
 		file.getData().set(getName() + ".plots", null);
 
+		for (TownFlag flag : getFlags().keySet())
+			file.getData().set(getName() + ".flags." + flag.toString().toLowerCase(), getFlags().get(flag));
+
 		for (Plot plot : getPlots()) {
 			plot.save(getName(), file);
 		}
@@ -163,9 +188,10 @@ public class Town {
 		if (TownManager.getInstance().isChunkClaimed(chunk))
 			return false;
 
-		//todo: world guard checks to make sure plot doesn't overlap region
+		if(WorldGuardUtil.getInstance().overlapsRegion(chunk))
+			return false;
 
-		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName());
+		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName(), new HashMap<>());
 		getPlots().add(plot);
 
 		if (getTownType() == null)
@@ -331,6 +357,21 @@ public class Town {
 			return TownType.VILLAGE;
 		else
 			return TownType.HAMLET;
+	}
+
+	public Map<TownFlag, Boolean> getFlags() {
+		return flags;
+	}
+
+	public boolean getFlag(TownFlag flag) {
+		if (!getFlags().containsKey(flag))
+			getFlags().put(flag, flag.getDefaultValue());
+
+		return getFlags().get(flag);
+	}
+
+	public void setFlag(TownFlag flag, boolean value) {
+		getFlags().put(flag, value);
 	}
 
 }
