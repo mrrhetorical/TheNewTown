@@ -49,7 +49,7 @@ public class Plot {
 		return owner;
 	}
 
-	private void setLeaser(UUID value) {
+	public void setLeaser(UUID value) {
 		leaser = value;
 	}
 
@@ -123,7 +123,7 @@ public class Plot {
 		file.getData().set(base + ".world", getWorldName());
 		file.getData().set(base + ".x", getX());
 		file.getData().set(base + ".z", getZ());
-		file.getData().set(base + ".leaser", getLeaser());
+		file.getData().set(base + ".leaser", getLeaser() != null ? getLeaser().toString() : "none");
 		file.getData().set(base + ".forSale", isForSale());
 		file.getData().set(base + ".cost", getCost());
 		file.saveData();
@@ -138,11 +138,26 @@ public class Plot {
 		EconomyResponse r = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getLeaser()), getCost());
 
 		if (!r.transactionSuccess()) {
-			leaser = null;
+			setLeaser(null);
 		} else
 			collected += getCost();
 
+		if (!isForSale())
+			setLeaser(null);
+
 		return collected;
+	}
+
+	boolean tryLeasePlot(UUID renter) {
+		EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(renter), getCost());
+
+		if (response.transactionSuccess()) {
+			setLeaser(renter);
+			EconomyResponse r = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(getOwner()), getCost());
+			return true;
+		}
+
+		return false;
 	}
 
 	static Plot loadPlot(String town, long id, TownFile file) {

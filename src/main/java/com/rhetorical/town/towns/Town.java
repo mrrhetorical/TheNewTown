@@ -52,7 +52,7 @@ public class Town {
 			getResidents().add(player);
 		}
 
-		tax = (float) file.getData().getDouble(name + ".tax");
+		setTax((float) file.getData().getDouble(name + ".tax"));
 
 		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
 
@@ -196,6 +196,15 @@ public class Town {
 			save();
 
 		return true;
+	}
+
+	public Plot getPlot(Chunk chunk) {
+		for (Plot plot : getPlots()) {
+			if (plot.getX() == chunk.getX() && plot.getZ() == chunk.getZ() && plot.getWorldName().equalsIgnoreCase(chunk.getWorld().getName()))
+				return plot;
+		}
+
+		return null;
 	}
 
 	public boolean addPlayer(UUID target) {
