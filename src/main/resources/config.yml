@@ -19,6 +19,8 @@ title:
 # Info for each tier of towns
 town_tiers:
   hamlet:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 4.0
     # Maximum amount of plots to be considered this tier of town
     max_plots: 8
     upkeep:
@@ -26,7 +28,10 @@ town_tiers:
       flat_rate: 50.0
       # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
       plot_cost: 2
+
   village:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 5.0
     # Maximum amount of plots to be considered this tier of town
     max_plots: 16
     upkeep:
@@ -35,6 +40,8 @@ town_tiers:
       # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
       plot_cost: 2.5
   town:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 8.0
     # Maximum amount of plots to be considered this tier of town
     max_plots: 32
     upkeep:
@@ -43,6 +50,8 @@ town_tiers:
       # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
       plot_cost: 4.0
   city:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 10.0
     # Maximum amount of plots to be considered this tier of town
     max_plots: 64
     upkeep:
@@ -51,6 +60,8 @@ town_tiers:
       # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
       plot_cost: 5.0
   major_city:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 15.0
     # Maximum amount of plots to be considered this tier of town
     max_plots: 128
     upkeep:
@@ -59,6 +70,8 @@ town_tiers:
       # How much each plot should cost above the threshold. (Always will be at least one counted at this rate.)
       plot_cost: 7.5
   city_state:
+    # How much should the user pay when claiming a plot as this town type?
+    claim_fee: 20.0
     # City states have no maximum amount of plots as they are very expensive to upkeep. You may set a maximum plot amount
     max_plots: -1
     upkeep:

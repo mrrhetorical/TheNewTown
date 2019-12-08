@@ -239,11 +239,18 @@ public class TownCommand {
 				return;
 			}
 
+			EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(p.getUniqueId()), town.getTownType().getClaimCost());
+			if (!response.transactionSuccess()) {
+				p.sendMessage(ChatColor.RED + String.format("You could not afford the $%s it costs to claim that plot!", town.getTownType().getClaimCost()));
+				return;
+			}
+
 			if (town.addPlot(chunk)) {
-				p.sendMessage(ChatColor.GREEN + "Successfully claimed plot for your town!");
+				p.sendMessage(ChatColor.GREEN + String.format("Successfully claimed plot for your town! $%s has been withdrawn from your account!", town.getTownType().getClaimCost()));
 				town.save();
 			} else {
-				p.sendMessage(ChatColor.RED + "Could not claim plot!");
+				TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(p.getUniqueId()), town.getTownType().getClaimCost());
+				p.sendMessage(ChatColor.RED + String.format("Could not claim plot! $%s has been refunded to your account!", town.getTownType().getClaimCost()));
 			}
 
 			return;
