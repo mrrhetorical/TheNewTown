@@ -6,12 +6,10 @@ import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
 import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
+import com.rhetorical.town.util.Position;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -41,6 +39,8 @@ public class TownCommand {
 		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
 		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
 		Leave("/t leave - Leaves your town.", "tnt.leave"), // done
+		SetHome("/t sethome - Sets the home for the town. (m)", "tnt.home"),
+		Home("/t home - Teleports you to the home for the town.", "tnt.home"),
 		Kick("/t kick [name] - Kicks a player from your town. (m)", "tnt.kick"); // done
 
 		private String message,
@@ -917,6 +917,70 @@ public class TownCommand {
 						Bukkit.getLogger().info(String.format("Error in showing town list! (Page, Entry): (%s, %s)", page, i));
 					}
 
+			return;
+		}
+		else if (args[0].equalsIgnoreCase("setHome")) {
+			if (!checkPerm(sender, CommandData.SetHome))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			if (!town.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You must be the town mayor to set the town's home!");
+				return;
+			}
+
+			if (!town.isChunkClaimed(p.getLocation().getChunk())) {
+				p.sendMessage(ChatColor.RED + "You can only set the town's home within a plot you own!");
+				return;
+			}
+
+			Position pos = Position.fromLocation(p.getLocation());
+			town.setHome(pos);
+			town.save();
+			p.sendMessage(ChatColor.GREEN + "Successfully set town's home!");
+			return;
+		}
+		else if (args[0].equalsIgnoreCase("home")) {
+			if (!checkPerm(sender, CommandData.Home))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			if (town.getHome() == null) {
+				p.sendMessage(ChatColor.RED + "Your town does not have a home set!");
+				return;
+			}
+
+			Location to = town.getHome().toLocation();
+			if (to != null) {
+				p.teleport(to);
+				p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.2f, 1f);
+			}
 			return;
 		}
 		else {
