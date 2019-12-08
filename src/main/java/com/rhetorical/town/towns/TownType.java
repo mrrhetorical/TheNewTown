@@ -9,6 +9,7 @@ public enum TownType {
 	private int maxPlots;
 	private float flatCost;
 	private float plotCost;
+	private float claimCost;
 
 	TownType(String rn, int plots, float flat, float rate) {
 		readableName = rn;
@@ -22,6 +23,7 @@ public enum TownType {
 		maxPlots = TheNewTown.getInstance().getConfig().getInt(String.format("town_tiers.%s.max_plots", toString().toLowerCase()));
 		flatCost = (float) TheNewTown.getInstance().getConfig().getDouble(String.format("town_tiers.%s.upkeep.flat_rate", toString().toLowerCase()));
 		plotCost = (float) TheNewTown.getInstance().getConfig().getDouble(String.format("town_tiers.%s.upkeep.plot_cost", toString().toLowerCase()));
+		claimCost = (float) TheNewTown.getInstance().getConfig().getDouble(String.format("town_tiers.%s.claim_fee", toString().toLowerCase()));
 	}
 
 	public int getMaxPlots() {
@@ -34,6 +36,10 @@ public enum TownType {
 
 	public float getPlotCost() {
 		return plotCost;
+	}
+
+	public float getClaimCost() {
+		return claimCost;
 	}
 
 	public static TownType getFromId(int id) {
