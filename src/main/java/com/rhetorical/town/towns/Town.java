@@ -188,7 +188,7 @@ public class Town {
 		if (TownManager.getInstance().isChunkClaimed(chunk))
 			return false;
 
-		if(WorldGuardUtil.getInstance().overlapsRegion(chunk))
+		if(TheNewTown.getInstance().hasWorldGuard() && WorldGuardUtil.getInstance().overlapsRegion(chunk))
 			return false;
 
 		Plot plot = new Plot(generatePlotId(), getMayor(), null, chunk, false, 0f, getName(), new HashMap<>());

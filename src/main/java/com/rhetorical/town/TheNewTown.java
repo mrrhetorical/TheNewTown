@@ -3,6 +3,7 @@ package com.rhetorical.town;
 import com.rhetorical.town.commands.TownCommand;
 import com.rhetorical.town.towns.TownManager;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -11,6 +12,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class TheNewTown extends JavaPlugin {
 
 	private static TheNewTown instance;
+
+	private boolean worldGuard;
 
 	private Economy economy;
 
@@ -22,6 +25,8 @@ public class TheNewTown extends JavaPlugin {
 			return;
 
 		instance = this;
+
+		worldGuard = Bukkit.getServer().getPluginManager().getPlugin("WorldGuard") != null;
 
 		saveDefaultConfig();
 		reloadConfig();
@@ -48,6 +53,10 @@ public class TheNewTown extends JavaPlugin {
 		}
 
 		return (economy != null);
+	}
+
+	public boolean hasWorldGuard() {
+		return worldGuard;
 	}
 
 	private void setCreationCost(float value) {

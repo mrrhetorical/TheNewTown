@@ -9,12 +9,9 @@ import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import sun.reflect.generics.tree.Tree;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 public class TownManager {
 	private static TownManager instance;
@@ -60,6 +57,26 @@ public class TownManager {
 
 	public Map<String, Town> getTowns() {
 		return towns;
+	}
+
+	public List<Town> getOrderedTowns() {
+		List<Town> map = new ArrayList<>();
+		List<Town> unsorted = new ArrayList<>(getTowns().values());
+
+
+		for (int i = 0; i < getTowns().values().size(); i++) {
+			Town lowest = null;
+			for (Town t : unsorted) {
+				if (lowest == null || t.getPlots().size() < lowest.getPlots().size())
+					lowest = t;
+			}
+			if (lowest != null) {
+				unsorted.remove(lowest);
+				map.add(lowest);
+			}
+		}
+
+		return map;
 	}
 
 	public Town getTown(String name) {
