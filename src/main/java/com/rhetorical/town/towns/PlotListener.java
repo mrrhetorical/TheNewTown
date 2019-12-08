@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -177,12 +178,26 @@ class PlotListener implements Listener {
 	public void onExplosion(BlockExplodeEvent e) {
 		if (getPlot().isInPlot(e.getBlock().getLocation()))
 			e.setCancelled(true);
+
+		for (Block b : e.blockList()) {
+			if (getPlot().isInPlot(b.getLocation())) {
+				e.setCancelled(true);
+				return;
+			}
+		}
 	}
 
 	@EventHandler
 	public void onExplosion(EntityExplodeEvent e) {
 		if (getPlot().isInPlot(e.getLocation()))
 			e.setCancelled(true);
+
+		for (Block b : e.blockList()) {
+			if (getPlot().isInPlot(b.getLocation())) {
+				e.setCancelled(true);
+				return;
+			}
+		}
 	}
 
 	@EventHandler
