@@ -3,6 +3,7 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.util.Position;
 import com.rhetorical.town.util.WorldGuardUtil;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -31,6 +32,8 @@ public class Town {
 	private LocalDateTime lastUpkeepPeriod;
 
 	private Map<TownFlag, Boolean> flags = new HashMap<>();
+
+	private Position home;
 
 	/**
 	 * Used in town loading.
@@ -61,6 +64,13 @@ public class Town {
 		lastTaxPeriod = converter.fromString(file.getData().getString(getName() + ".lastTaxPeriod"));
 		lastUpkeepPeriod = converter.fromString(file.getData().getString(getName() + ".lastUpkeepPeriod"));
 
+		String pos = file.getData().getString(getName() + ".home");
+		if (pos != null) {
+			Position h = Position.fromString(pos);
+			if (h != null)
+				setHome(h);
+		}
+
 		ConfigurationSection f = file.getData().getConfigurationSection(getName() + ".flags");
 		if (f != null)
 			for (String key : f.getKeys(false)) {
@@ -88,6 +98,7 @@ public class Town {
 		setTax(0f);
 		residents.add(mayor);
 		setName(name);
+		setHome(null);
 		setTownType(TownType.HAMLET);
 		for (TownFlag flag : TownFlag.values()) {
 			setFlag(flag, flag.getDefaultValue());
@@ -133,6 +144,8 @@ public class Town {
 		file.getData().set(getName() + ".mayor", getMayor().toString());
 
 		file.getData().set(getName() + ".tax", getTax());
+
+		file.getData().set(getName() + ".home", getHome() != null ? getHome().toString() : "none");
 
 		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
 
@@ -182,6 +195,14 @@ public class Town {
 
 	public void setTax(float value) {
 		tax = value;
+	}
+
+	public void setHome(Position position) {
+		home = position;
+	}
+
+	public Position getHome() {
+		return home;
 	}
 
 	public boolean addPlot(Chunk chunk) {
