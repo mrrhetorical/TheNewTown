@@ -17,6 +17,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+
 public class TownCommand {
 
 	enum CommandData {
@@ -867,10 +871,70 @@ public class TownCommand {
 			}
 			return;
 		}
+		else if (args[0].equalsIgnoreCase("list")) {
+			if (!checkPerm(sender, CommandData.List))
+				return;
+
+			if (args.length == 1)
+				args = new String[]{"list", "1"};
+
+			int page;
+
+			try {
+				page = Integer.parseInt(args[1]);
+			} catch (Exception e) {
+				sender.sendMessage(ChatColor.RED + "Invalid page number!");
+				return;
+			}
+
+			int perPage = 5;
+
+			List<Town> townMap = TownManager.getInstance().getOrderedTowns();
+
+			int lastPage = (int) Math.ceil((double) townMap.size() / (double) perPage);
+
+			if (lastPage != 0 && (page > lastPage || page <= 0)) {
+				sender.sendMessage(ChatColor.RED + "No such page exists!");
+				return;
+			}
+
+			int offset = (page - 1) * perPage;
+
+			sender.sendMessage(String.format("##### [Towns List %s/%s] #####", page, (lastPage != 0 ? lastPage : 1)));
+
+			if (lastPage != 0)
+				for (int i = (townMap.size() - 1) - offset; i >= 0 && i > (townMap.size() - 1) - offset - perPage; i--)
+					try {
+						sender.sendMessage(getTownShortListing(townMap.get(i), townMap.size() - i));
+					} catch (Exception|Error ignored) {
+						Bukkit.getLogger().info(String.format("Error in showing town list! (Page, Entry): (%s, %s)", page, i));
+					}
+
+			return;
+		}
 		else {
 			sender.sendMessage(ChatColor.RED + "Invalid command!" + (checkPerm(sender, CommandData.Help) ? " Try using /t help for more info!" : ""));
 			return;
 		}
+	}
+
+	private static String getTownShortListing(Town town, int rank) {
+		StringBuilder sb = new StringBuilder();
+
+		if (town == null)
+			return "NULL";
+
+		sb.append(String.format("Rank: %s", rank));
+		sb.append(ChatColor.RESET + " | ");
+		sb.append(String.format("Name: %s", town.getName()));
+		sb.append(ChatColor.RESET + " | ");
+		sb.append(String.format("Mayor: %s", Bukkit.getOfflinePlayer(town.getMayor()).getName()));
+		sb.append(ChatColor.RESET + " | ");
+		sb.append(String.format("Size: %s (%s)", town.getTownType().getReadable(), town.getPlots().size()));
+		sb.append(ChatColor.RESET + " | ");
+		sb.append(String.format("Population: %s", town.getResidents().size()));
+
+		return sb.toString();
 	}
 
 	private boolean hasPermission(CommandSender sender, String node) {
