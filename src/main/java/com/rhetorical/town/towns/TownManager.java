@@ -116,9 +116,7 @@ public class TownManager {
 	public boolean createTown(UUID owner, Chunk chunk, String name) {
 		if (isChunkClaimed(chunk))
 			return false;
-
-		//todo: worldguard stuff to check
-
+		
 		Collection<String> townNames = new HashSet<>();
 		for (String s : getTowns().keySet())
 			townNames.add(s.toLowerCase());

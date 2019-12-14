@@ -5,7 +5,18 @@ import org.bukkit.Chunk;
 class PlotAlreadyExistsException extends Exception {
 
 	enum FailReason {
-		ALREADY_CLAIMED, REGION_PROTECTION
+		ALREADY_CLAIMED("Chunk already claimed!"), REGION_PROTECTION("Chunk is protected!");
+
+		private String reason;
+
+		FailReason(String reason) {
+			this.reason	= reason;
+		}
+
+		@Override
+		public String toString() {
+			return reason;
+		}
 	}
 
 	private Chunk chunk;
