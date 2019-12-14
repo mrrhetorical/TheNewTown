@@ -14,6 +14,7 @@ import java.util.List;
 
 public class CommandCompleter implements TabCompleter {
 
+	@SuppressWarnings("Duplicates")
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 
@@ -81,6 +82,17 @@ public class CommandCompleter implements TabCompleter {
 
 			if (checkPerm(sender, TownCommand.CommandData.Kick))
 				list.add("kick");
+
+			if (sender instanceof Player) {
+				if (!sender.isOp() || sender.hasPermission("t.admin")) {
+					Town town = TownManager.getInstance().getTownOfPlayer(((Player) sender).getUniqueId());
+					if (town != null)
+						list.add(town.getName());
+				} else
+					list.addAll(getTownList());
+			} else if (sender instanceof ConsoleCommandSender)
+				list.addAll(getTownList());
+
 			return list;
 		}
 		//inputting second argument
@@ -101,8 +113,7 @@ public class CommandCompleter implements TabCompleter {
 			}
 
 			if ((args[0].equalsIgnoreCase("info") && checkPerm(sender, TownCommand.CommandData.Info))
-					|| (args[0].equalsIgnoreCase("join") && checkPerm(sender, TownCommand.CommandData.Join))
-					|| (args[0].equalsIgnoreCase("flags") && checkPerm(sender, TownCommand.CommandData.Flags))) {
+					|| (args[0].equalsIgnoreCase("join") && checkPerm(sender, TownCommand.CommandData.Join))) {
 				list.addAll(getTownList());
 				return list;
 			}

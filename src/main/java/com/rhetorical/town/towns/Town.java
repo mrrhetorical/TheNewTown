@@ -35,6 +35,8 @@ public class Town {
 
 	private Position home;
 
+	private TownInventory inventory;
+
 	/**
 	 * Used in town loading.
 	 * */
@@ -87,6 +89,8 @@ public class Town {
 			if (!getFlags().containsKey(flag))
 				getFlags().put(flag, flag.getDefaultValue());
 
+
+		inventory = new TownInventory(getName());
 	}
 
 	/**
@@ -112,6 +116,8 @@ public class Town {
 
 				throw new PlotAlreadyExistsException(initial, reason);
 		}
+
+		inventory = new TownInventory(getName());
 	}
 
 	void loadPlots(TownFile file) {
@@ -205,6 +211,10 @@ public class Town {
 		return home;
 	}
 
+	public TownInventory getInventory() {
+		return inventory;
+	}
+
 	public boolean addPlot(Chunk chunk) {
 		if (TownManager.getInstance().isChunkClaimed(chunk))
 			return false;
@@ -277,6 +287,7 @@ public class Town {
 		for (Plot plot : getPlots()) {
 			plot.unregister();
 		}
+		inventory.unregister();
 	}
 
 	public TownType getTownType() {
