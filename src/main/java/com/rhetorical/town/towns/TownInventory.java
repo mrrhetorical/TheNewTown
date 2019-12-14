@@ -211,7 +211,7 @@ public class TownInventory implements Listener {
 		if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR)
 			return;
 
-		ItemStack clicked = e.getCurrentItem();
+		ItemStack clicked = e.getInventory().getItem(e.getRawSlot());
 
 		Player p = (Player) e.getWhoClicked();
 
@@ -219,8 +219,8 @@ public class TownInventory implements Listener {
 			p.closeInventory();
 			return;
 		} else if(clicked.equals(back)) {
-			if (getInfoMenu() != null && getInfoMenu().equals(e.getInventory())) {
-				openInfoMenu(p);
+			if (e.getInventory().equals(getInfoMenu())) {
+				openMenu(p);
 				return;
 			} else if (invite.contains(e.getInventory())) {
 				openMenu(p);
@@ -233,7 +233,7 @@ public class TownInventory implements Listener {
 
 		//is menu
 		if (e.getInventory().equals(getMenu())) {
-			if (e.getSlot() == 11) {
+			if (e.getRawSlot() == 11) {
 				openInfoMenu((Player) e.getWhoClicked());
 			}
 		}
