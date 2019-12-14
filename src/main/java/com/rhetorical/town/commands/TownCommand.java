@@ -7,7 +7,6 @@ import com.rhetorical.town.towns.TownManager;
 import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
 import com.rhetorical.town.util.Position;
-import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -15,9 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 public class TownCommand {
 

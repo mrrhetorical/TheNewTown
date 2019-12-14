@@ -77,5 +77,5 @@ public class TheNewTown extends JavaPlugin {
 
 		return true;
 	}
-
+	
 }
