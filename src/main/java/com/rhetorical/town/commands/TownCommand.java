@@ -22,7 +22,7 @@ public class TownCommand {
 
 		Help("/t help {page} - Shows the help messages for the given page, (or first page if none given).", "tnt.help"), // done
 		Create("/t create [name] - Claims the plot you're standing in and creates the new town.", "tnt.create"), // done
-		Delete("/t delete [name] [name] - Deletes the town as mayor. Input town name twice to confirm. (m)", "tnt.delete"), // done
+		Delete("/t delete [name] - Deletes the town as mayor. (m)", "tnt.delete"), // done
 		Join("/t join [town name] - Attempts to join the town with the given name.", "tnt.join"), // done
 		Invite("/t invite [player] - Invites the given player to your town. (m)", "tnt.invite"), // done
 		Claim("/t claim - Claims the plot you're standing in for your town. (m)", "tnt.claim"), // done
@@ -57,7 +57,7 @@ public class TownCommand {
 		}
 	}
 
-	private String pageHeader = "##### [TheNewTown Help %s/%s] #####";
+	private String pageHeader = ChatColor.BLUE + "##### " + ChatColor.GREEN + "[TheNewTown Help " + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "/" + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "]" + ChatColor.BLUE + " #####";
 
 	private final int messagesPerPage = 5;
 
@@ -153,8 +153,8 @@ public class TownCommand {
 			if (!checkPerm(sender, CommandData.Delete))
 				return;
 
-			if (args.length != 3) {
-				sender.sendMessage(ChatColor.RED + "Improper usage! Correct usage: /t delete [name] [name]");
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Improper usage! Correct usage: /t delete [name]");
 				return;
 			}
 
@@ -163,13 +163,6 @@ public class TownCommand {
 				Town t = TownManager.getInstance().getTown(town);
 				if (t == null) {
 					sender.sendMessage(ChatColor.RED + "No such town exists with that name!");
-					return;
-				}
-
-				String town2 = args[2];
-
-				if (!town.equals(town2)) {
-					sender.sendMessage(ChatColor.RED + "Could not delete town! Town names do not match!");
 					return;
 				}
 
@@ -189,20 +182,14 @@ public class TownCommand {
 				return;
 			}
 
-			String a = args[1],
-					b = args[2];
+			String town = args[1];
 
-			if (!a.equals(t.getName())) {
+			if (!town.equals(t.getName())) {
 				sender.sendMessage(ChatColor.RED + "Could not delete town! You can only delete your own town!");
 				return;
 			}
 
-			if (!a.equals(b)) {
-				sender.sendMessage(ChatColor.RED + "Could not delete town! Town names do not match!");
-				return;
-			}
-
-			TownManager.getInstance().deleteTown(a);
+			TownManager.getInstance().deleteTown(town);
 			sender.sendMessage(ChatColor.GREEN + "Successfully deleted town!");
 			return;
 		}
@@ -1005,7 +992,7 @@ public class TownCommand {
 		return sb.toString();
 	}
 
-	private boolean hasPermission(CommandSender sender, String node) {
+	private static boolean hasPermission(CommandSender sender, String node) {
 		return sender.hasPermission(node) || sender.isOp() || sender.hasPermission("tnt.*");
 	}
 
@@ -1014,14 +1001,14 @@ public class TownCommand {
 	 *
 	 * @return if the player has permission.
 	 * */
-	private boolean checkPerm(CommandSender sender, CommandData command) {
+	static boolean checkPerm(CommandSender sender, CommandData command) {
 		boolean b = hasPermission(sender, command.getPermission());
 		if (!b)
 			sendNoPermissionMessage(sender);
 		return b;
 	}
 
-	private void sendNoPermissionMessage(CommandSender sender) {
+	private static void sendNoPermissionMessage(CommandSender sender) {
 		sender.sendMessage(ChatColor.RED + "No permission!");
 	}
 
