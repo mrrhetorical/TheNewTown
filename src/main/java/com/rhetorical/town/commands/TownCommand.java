@@ -20,25 +20,25 @@ public class TownCommand {
 
 	enum CommandData {
 
-		Help("/t help {page} - Shows the help messages for the given page, (or first page if none given).", "tnt.help"), // done
-		Create("/t create [name] - Claims the plot you're standing in and creates the new town.", "tnt.create"), // done
-		Delete("/t delete [name] - Deletes the town as mayor. (m)", "tnt.delete"), // done
-		Join("/t join [town name] - Attempts to join the town with the given name.", "tnt.join"), // done
-		Invite("/t invite [player] - Invites the given player to your town. (m)", "tnt.invite"), // done
-		Claim("/t claim - Claims the plot you're standing in for your town. (m)", "tnt.claim"), // done
-		Unclaim("/t unclaim - Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
-		Sell("/t sell [cost] - Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
-		Buy("/t lease (release) - Leases the current plot from the town or releases lease.", "tnt.lease"), // done
-		Flag("/t flag [plot/town] [flag] [true/false/clear] - Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
-		Flags("/t flags [name] - Tells you the current flags of the given town, or plot if the town name isn't there.", "tnt.flag"),
-		Tax("/t tax [value] - Sets the tax rate for your town. (m)", "tnt.tax"), // done
-		Info("/t info [town] - Shows you info about the given town.", "tnt.info"), // done
-		Here("/t here - Checks current plot to see who it belongs to.", "tnt.here"), // done
-		List("/t list [page] - Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
-		Leave("/t leave - Leaves your town.", "tnt.leave"), // done
-		SetHome("/t sethome - Sets the home for the town. (m)", "tnt.home"),
-		Home("/t home - Teleports you to the home for the town.", "tnt.home"),
-		Kick("/t kick [name] - Kicks a player from your town. (m)", "tnt.kick"); // done
+		Help(ChatColor.YELLOW + "/t help {page}" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows the help messages for the given page, (or first page if none given).", "tnt.help"), // done
+		Create(ChatColor.YELLOW + "/t create [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Claims the plot you're standing in and creates a new town with the given name.", "tnt.create"), // done
+		Delete(ChatColor.YELLOW + "/t delete [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Deletes the town as mayor. (m)", "tnt.delete"), // done
+		Join(ChatColor.YELLOW + "/t join [town name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Attempts to join the town with the given name.", "tnt.join"), // done
+		Invite(ChatColor.YELLOW + "/t invite [player]" + ChatColor.RED + " - " + ChatColor.WHITE + "Invites the given player to your town. (m)", "tnt.invite"), // done
+		Claim(ChatColor.YELLOW + "/t claim" + ChatColor.RED + " - " + ChatColor.WHITE + "Claims the plot you're standing in for your town. (m)", "tnt.claim"), // done
+		Unclaim(ChatColor.YELLOW + "/t unclaim" + ChatColor.RED + " - " + ChatColor.WHITE + "Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
+		Sell(ChatColor.YELLOW + "/t sell [cost]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
+		Buy(ChatColor.YELLOW + "/t lease (release)" + ChatColor.RED + " - " + ChatColor.WHITE + "Leases the current plot from the town or releases lease.", "tnt.lease"), // done
+		Flag(ChatColor.YELLOW + "/t flag [plot/town] [flag] [true/false/clear]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
+		Flags(ChatColor.YELLOW + "/t flags [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Tells you the current flags of the given town, or plot if the town name isn't there.", "tnt.flag"),
+		Tax(ChatColor.YELLOW + "/t tax [value]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the tax rate for your town. (m)", "tnt.tax"), // done
+		Info(ChatColor.YELLOW + "/t info [town]" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows you info about the given town.", "tnt.info"), // done
+		Here(ChatColor.YELLOW + "/t here" + ChatColor.RED + " - " + ChatColor.WHITE + "Checks current plot to see who it belongs to.", "tnt.here"), // done
+		List(ChatColor.YELLOW + "/t list [page]" + ChatColor.RED + " - " + ChatColor.WHITE + "Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
+		Leave(ChatColor.YELLOW + "/t leave" + ChatColor.RED + " - " + ChatColor.WHITE + "Leaves your town.", "tnt.leave"), // done
+		SetHome(ChatColor.YELLOW + "/t sethome" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the home for the town. (m)", "tnt.home"),
+		Home(ChatColor.YELLOW + "/t home" + ChatColor.RED + " - " + ChatColor.WHITE + "Teleports you to the home for the town.", "tnt.home"),
+		Kick(ChatColor.YELLOW + "/t kick [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Kicks a player from your town. (m)", "tnt.kick"); // done
 
 		private String message,
 				permission;
@@ -57,7 +57,7 @@ public class TownCommand {
 		}
 	}
 
-	private String pageHeader = ChatColor.BLUE + "##### " + ChatColor.GREEN + "[TheNewTown Help " + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "/" + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "]" + ChatColor.BLUE + " #####";
+	private String pageHeader = ChatColor.RED + "#####  [ " + ChatColor.WHITE + "TheNewTown Help (" + ChatColor.YELLOW + "%s" + ChatColor.WHITE + "/" + ChatColor.YELLOW + "%s" + ChatColor.WHITE + ") " + ChatColor.RED + "] #####";
 
 	private final int messagesPerPage = 5;
 
