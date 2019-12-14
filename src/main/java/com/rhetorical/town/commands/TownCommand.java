@@ -992,7 +992,7 @@ public class TownCommand {
 		return sb.toString();
 	}
 
-	private static boolean hasPermission(CommandSender sender, String node) {
+	static boolean hasPermission(CommandSender sender, String node) {
 		return sender.hasPermission(node) || sender.isOp() || sender.hasPermission("tnt.*");
 	}
 
@@ -1001,7 +1001,7 @@ public class TownCommand {
 	 *
 	 * @return if the player has permission.
 	 * */
-	static boolean checkPerm(CommandSender sender, CommandData command) {
+	private boolean checkPerm(CommandSender sender, CommandData command) {
 		boolean b = hasPermission(sender, command.getPermission());
 		if (!b)
 			sendNoPermissionMessage(sender);
