@@ -57,7 +57,7 @@ public class TownCommand {
 		}
 	}
 
-	private String pageHeader = "##### [TheNewTown Help %s/%s] #####";
+	private String pageHeader = ChatColor.BLUE + "##### " + ChatColor.GREEN + "[TheNewTown Help " + ChatColor.YELLOW + "%s + " + ChatColor.GREEN + "/%s] #####";
 
 	private final int messagesPerPage = 5;
 
@@ -1005,7 +1005,7 @@ public class TownCommand {
 		return sb.toString();
 	}
 
-	private boolean hasPermission(CommandSender sender, String node) {
+	private static boolean hasPermission(CommandSender sender, String node) {
 		return sender.hasPermission(node) || sender.isOp() || sender.hasPermission("tnt.*");
 	}
 
@@ -1014,14 +1014,14 @@ public class TownCommand {
 	 *
 	 * @return if the player has permission.
 	 * */
-	private boolean checkPerm(CommandSender sender, CommandData command) {
+	static boolean checkPerm(CommandSender sender, CommandData command) {
 		boolean b = hasPermission(sender, command.getPermission());
 		if (!b)
 			sendNoPermissionMessage(sender);
 		return b;
 	}
 
-	private void sendNoPermissionMessage(CommandSender sender) {
+	private static void sendNoPermissionMessage(CommandSender sender) {
 		sender.sendMessage(ChatColor.RED + "No permission!");
 	}
 

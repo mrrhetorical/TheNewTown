@@ -1,13 +1,18 @@
 package com.rhetorical.town;
 
+import com.rhetorical.town.commands.CommandCompleter;
 import com.rhetorical.town.commands.TownCommand;
 import com.rhetorical.town.towns.TownManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TheNewTown extends JavaPlugin {
 
@@ -36,6 +41,8 @@ public class TheNewTown extends JavaPlugin {
 		setupEconomy();
 
 		TownManager.getInstance(); // Load towns
+
+		getCommand("t").setTabCompleter(new CommandCompleter());
 	}
 
 	public static TheNewTown getInstance() {
@@ -77,5 +84,4 @@ public class TheNewTown extends JavaPlugin {
 
 		return true;
 	}
-	
 }
