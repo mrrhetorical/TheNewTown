@@ -1,5 +1,8 @@
 package com.rhetorical.town.towns.flags;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum TownFlag {
 	NO_PVP(true), // Disables pvp within the town border. (default: true) // done
 	ALLOW_MODIFICATION(true), // Allows residents to break and destroy blocks in plots they are not leasing. (default: true) // done
@@ -21,5 +24,13 @@ public enum TownFlag {
 
 	public boolean getDefaultValue() {
 		return defaultValue;
+	}
+
+	public static List<String> stringValues() {
+		List<String> v = new ArrayList<>();
+		for (TownFlag flag : TownFlag.values())
+			v.add(flag.toString().toLowerCase());
+
+		return v;
 	}
 }
