@@ -140,7 +140,7 @@ public class CommandCompleter implements TabCompleter {
 	}
 
 	private boolean checkPerm(CommandSender sender, TownCommand.CommandData data) {
-		return TownCommand.checkPerm(sender, data);
+		return TownCommand.hasPermission(sender, data.getPermission());
 	}
 
 	private List<String> getTownList() {
