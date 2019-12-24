@@ -1,6 +1,7 @@
 package com.rhetorical.town.commands;
 
 import com.rhetorical.town.TheNewTown;
+import com.rhetorical.town.towns.MapManager;
 import com.rhetorical.town.towns.Plot;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
@@ -37,9 +38,10 @@ public class TownCommand {
 		Here(ChatColor.YELLOW + "/t here" + ChatColor.RED + " - " + ChatColor.WHITE + "Checks current plot to see who it belongs to.", "tnt.here"), // done
 		List(ChatColor.YELLOW + "/t list [page]" + ChatColor.RED + " - " + ChatColor.WHITE + "Lists all the towns, their type, their mayor, and they population.", "tnt.list"),
 		Leave(ChatColor.YELLOW + "/t leave" + ChatColor.RED + " - " + ChatColor.WHITE + "Leaves your town.", "tnt.leave"), // done
-		SetHome(ChatColor.YELLOW + "/t sethome" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the home for the town. (m)", "tnt.home"),
-		Home(ChatColor.YELLOW + "/t home" + ChatColor.RED + " - " + ChatColor.WHITE + "Teleports you to the home for the town.", "tnt.home"),
-		Kick(ChatColor.YELLOW + "/t kick [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Kicks a player from your town. (m)", "tnt.kick"); // done
+		SetHome(ChatColor.YELLOW + "/t sethome" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the home for the town. (m)", "tnt.home"), // done
+		Home(ChatColor.YELLOW + "/t home" + ChatColor.RED + " - " + ChatColor.WHITE + "Teleports you to the home for the town.", "tnt.home"), // done
+		Kick(ChatColor.YELLOW + "/t kick [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Kicks a player from your town. (m)", "tnt.kick"),
+		MAP(ChatColor.YELLOW + "/t map (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a map of the surrounding chunks. Auto automatically updates the map.", "tnt.map"); // done
 
 		private String message,
 				permission;
@@ -931,6 +933,30 @@ public class TownCommand {
 				p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.2f, 1f);
 			}
 			return;
+		}
+		else if (args[0].equalsIgnoreCase("map")) {
+			if (!checkPerm(sender, CommandData.SetHome))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			if (args.length == 1) {
+				MapManager.getInstance().showMap((Player) sender);
+				return;
+			} else if (!args[1].equalsIgnoreCase("auto") || args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t map (auto)");
+				return;
+			} else {
+				MapManager.getInstance().autoShowMap((Player) sender);
+				sender.sendMessage(ChatColor.GREEN + String.format("Auto show map is now %s!", MapManager.getInstance().isAutoShowMap((Player) sender) ? "enabled" : "disabled"));
+				return;
+			}
+
+
+
 		}
 		else {
 			if (sender instanceof Player) {
