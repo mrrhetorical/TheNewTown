@@ -111,7 +111,7 @@ public class TownInventory implements Listener {
 	}
 
 	private boolean shouldCancelClick(Inventory inventory) {
-		return invite.contains(inventory) || members.contains(inventory) || menu.equals(inventory) || infoMenu.equals(inventory) || flags.equals(inventory);
+		return (invite != null && invite.contains(inventory)) || (members != null && members.contains(inventory)) || (menu != null && menu.equals(inventory)) || (infoMenu != null && infoMenu.equals(inventory)) || (flags != null && flags.equals(inventory));
 	}
 
 	public void setupMenu() {
