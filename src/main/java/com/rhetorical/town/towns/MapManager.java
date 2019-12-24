@@ -35,9 +35,12 @@ public class MapManager implements Listener {
 	}
 
 	public void showMap(Player t) {
-		int x = t.getLocation().getChunk().getX() - 15,
-				y = t.getLocation().getChunk().getZ() - 3;
+		showMap(t, t.getLocation().getChunk().getX(), t.getLocation().getChunk().getZ());
+	}
 
+	public void showMap(Player t, int x, int y) {
+		x -= 15;
+		y -= 3;
 		World world = t.getLocation().getWorld();
 		if (world == null) {
 			Bukkit.getLogger().warning(String.format("Could not get world of player %s!", t.getDisplayName()));
@@ -48,7 +51,7 @@ public class MapManager implements Listener {
 
 		Chunk chunk;
 
-		for (int r = 7; r >= 0; r--) {
+		for (int r = 0; r < 7; r++) {
 			StringBuilder sb = new StringBuilder();
 			for (int c = 0; c < 31; c++) {
 				chunk = world.getChunkAt(x + c, y + r);
@@ -86,6 +89,6 @@ public class MapManager implements Listener {
 			return;
 
 		if (isAutoShowMap(e.getPlayer()))
-			showMap(e.getPlayer());
+			showMap(e.getPlayer(), e.getTo().getChunk().getX(), e.getTo().getChunk().getZ());
 	}
 }
