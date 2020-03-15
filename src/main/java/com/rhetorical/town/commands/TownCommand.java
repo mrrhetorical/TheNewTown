@@ -32,7 +32,7 @@ public class TownCommand {
 		Sell(ChatColor.YELLOW + "/t sell [cost]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
 		Buy(ChatColor.YELLOW + "/t lease (release)" + ChatColor.RED + " - " + ChatColor.WHITE + "Leases the current plot from the town or releases lease.", "tnt.lease"), // done
 		Flag(ChatColor.YELLOW + "/t flag [plot/town] [flag] [true/false/clear]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
-		Flags(ChatColor.YELLOW + "/t flags" + ChatColor.RED + " - " + ChatColor.WHITE + "Attempst to open the flag override gui for the current plot.", "tnt.flag"),
+		Flags(ChatColor.YELLOW + "/t flags" + ChatColor.RED + " - " + ChatColor.WHITE + "Attempts to open the flag override gui for the current plot.", "tnt.flag"),
 		Tax(ChatColor.YELLOW + "/t tax [value]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the tax rate for your town. (m)", "tnt.tax"), // done
 		Info(ChatColor.YELLOW + "/t info [town]" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows you info about the given town.", "tnt.info"), // done
 		Here(ChatColor.YELLOW + "/t here" + ChatColor.RED + " - " + ChatColor.WHITE + "Checks current plot to see who it belongs to.", "tnt.here"), // done
@@ -963,11 +963,16 @@ public class TownCommand {
 				Player p = (Player) sender;
 				Town t = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
 				if (t != null) {
-					if (args[0].equalsIgnoreCase(t.getName())) {
-						if (!checkPerm(sender, CommandData.Open))
-							return;
+					if (t.getMayor().equals(p.getUniqueId())) {
+						if (args[0].equalsIgnoreCase(t.getName())) {
+							if (!checkPerm(sender, CommandData.Open))
+								return;
 
-						t.getInventory().openMenu(p);
+							t.getInventory().openMenu(p);
+							return;
+						}
+					} else {
+						sender.sendMessage(ChatColor.RED + "You must be the town's mayor to use this command!");
 						return;
 					}
 				}

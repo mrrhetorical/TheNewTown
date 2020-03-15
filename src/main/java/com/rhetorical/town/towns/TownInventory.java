@@ -1,11 +1,9 @@
 package com.rhetorical.town.towns;
 
 import com.rhetorical.town.TheNewTown;
+import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.Player;
@@ -142,6 +140,8 @@ public class TownInventory implements Listener {
 		getMenu().setItem(13, invite);
 		getMenu().setItem(15, flagsItem);
 		getMenu().setItem(26, close);
+
+		flags = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Flags");
 	}
 
 	public void setupInfoMenu() {
@@ -180,7 +180,26 @@ public class TownInventory implements Listener {
 	}
 
 	public void setupFlagsMenu() {
-		flags = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Flags");
+
+		Town t = TownManager.getInstance().getTown(getTown());
+
+		for (int i = 0; i < TownFlag.values().length; i++) {
+			TownFlag flag = TownFlag.values()[i];
+			boolean status = t.getFlag(flag);
+
+			ItemStack item = new ItemStack(status ? Material.GREEN_BANNER : Material.RED_BANNER);
+			ItemMeta meta = item.getItemMeta();
+			if (meta != null) {
+				meta.setDisplayName((status ? ChatColor.GREEN : ChatColor.RED) + flag.getName());
+				List<String> lore = new ArrayList<>();
+				lore.add("" + ChatColor.YELLOW + ChatColor.ITALIC + flag.getDescription());
+				lore.add(ChatColor.WHITE + "Status: " + (status ? ChatColor.GREEN + "Enabled" : ChatColor.RED + "Disabled"));
+				meta.setLore(lore);
+			}
+			item.setItemMeta(meta);
+
+			getFlags().setItem(i, item);
+		}
 
 		getFlags().setItem(22, back);
 	}
@@ -304,6 +323,9 @@ public class TownInventory implements Listener {
 			} else if (members.contains(e.getInventory())) {
 				openInfoMenu(p);
 				return;
+			} else if (e.getInventory().equals(getFlags())) {
+				openMenu(p);
+				return;
 			}
 		}
 
@@ -315,6 +337,9 @@ public class TownInventory implements Listener {
 				setupInviteMenu();
 				if (!invite.isEmpty())
 					e.getWhoClicked().openInventory(invite.get(0));
+			} else if (e.getRawSlot() == 15) {
+				setupFlagsMenu();
+				p.openInventory(getFlags());
 			}
 
 		}
@@ -377,6 +402,22 @@ public class TownInventory implements Listener {
 					p.sendMessage(ChatColor.RED + "You must be the mayor of a town to kick players!");
 				}
 			}
+		}
+
+		//is flags menu
+		if (e.getInventory().equals(getFlags())) {
+			int slot = e.getRawSlot();
+			TownFlag flag;
+
+			if (slot >= TownFlag.values().length)
+				return;
+
+			flag = TownFlag.values()[slot];
+
+			Town town = TownManager.getInstance().getTown(getTown());
+			town.setFlag(flag, !town.getFlag(flag));
+			setupFlagsMenu();
+			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 0.4f);
 		}
 
 	}
