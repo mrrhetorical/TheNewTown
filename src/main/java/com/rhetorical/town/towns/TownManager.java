@@ -140,7 +140,14 @@ public class TownManager {
 
 		float cost = TheNewTown.getInstance().getCreationCost();
 
-		EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(owner), cost);
+		EconomyResponse response;
+
+		try {
+			response = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(owner), cost);
+		} catch (Error|Exception e) {
+			Bukkit.getLogger().severe("Could not create a town because there is no economy handler! Please make sure you have both Vault and some economy plugin compatible with Vault!");
+			return false;
+		}
 		Player p = Bukkit.getPlayer(owner);
 		if (!response.transactionSuccess()) {
 			if (p != null)
