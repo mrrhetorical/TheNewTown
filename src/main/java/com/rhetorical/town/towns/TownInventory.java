@@ -11,15 +11,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TownInventory implements Listener {
 
@@ -29,6 +28,8 @@ public class TownInventory implements Listener {
 	private List<Inventory> members = new ArrayList<>();
 
 	private ItemStack back, next, prev, close;
+
+	private Map<Plot, Inventory> plotFlagInventories = new HashMap<>();
 
 	TownInventory(String town) {
 		setTown(town);
@@ -110,8 +111,12 @@ public class TownInventory implements Listener {
 		return members.get(page);
 	}
 
+	public Map<Plot, Inventory> getPlotFlagInventories() {
+		return plotFlagInventories;
+	}
+
 	private boolean shouldCancelClick(Inventory inventory) {
-		return (invite != null && invite.contains(inventory)) || (members != null && members.contains(inventory)) || (menu != null && menu.equals(inventory)) || (infoMenu != null && infoMenu.equals(inventory)) || (flags != null && flags.equals(inventory));
+		return (invite != null && invite.contains(inventory)) || (members != null && members.contains(inventory)) || (menu != null && menu.equals(inventory)) || (infoMenu != null && infoMenu.equals(inventory)) || (flags != null && flags.equals(inventory) || getPlotFlagInventories().values().contains(inventory));
 	}
 
 	public void setupMenu() {
@@ -295,6 +300,51 @@ public class TownInventory implements Listener {
 		p.openInventory(getInfoMenu());
 	}
 
+	public Inventory openPlotFlagInventory(Plot plot) {
+
+		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(null, 27, ChatColor.GOLD + "Plot " + ChatColor.YELLOW + "(" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName() + ChatColor.GOLD + " - Flags");
+
+		for (int i = 0; i < TownFlag.values().length; i++) {
+			TownFlag flag = TownFlag.values()[i];
+			int status = plot.hasFlag(flag) ? plot.getFlag(flag) ? 1 : 0 : 2;
+
+			ItemStack item = new ItemStack(status == 0 ? Material.RED_BANNER : status == 1 ? Material.GREEN_BANNER : Material.GRAY_BANNER);
+			ItemMeta meta = item.getItemMeta();
+			if (meta != null) {
+				meta.setDisplayName((status == 1 ? ChatColor.GREEN : status == 0 ? ChatColor.RED : ChatColor.GRAY) + flag.getName());
+				List<String> lore = new ArrayList<>();
+				lore.add("" + ChatColor.YELLOW + ChatColor.ITALIC + flag.getDescription());
+				lore.add(ChatColor.WHITE + "Status: " + (status == 1 ? ChatColor.GREEN + "Enabled" : status == 0 ? ChatColor.RED + "Disabled" : ChatColor.GRAY + "Inherits Town Flag"));
+				meta.setLore(lore);
+			}
+			item.setItemMeta(meta);
+
+			inv.setItem(i, item);
+		}
+
+		inv.setItem(22, close);
+
+		getPlotFlagInventories().put(plot, inv);
+
+		return inv;
+	}
+
+	public void closePlotFlagInventory(Plot p) {
+		getPlotFlagInventories().remove(p);
+	}
+
+	@EventHandler
+	public void onInventoryClose(InventoryCloseEvent e) {
+		if (getPlotFlagInventories().values().contains(e.getInventory())) {
+			for (Plot p : new ArrayList<>(getPlotFlagInventories().keySet())) {
+				if (getPlotFlagInventories().get(p).equals(e.getInventory())) {
+					closePlotFlagInventory(p);
+					return;
+				}
+			}
+		}
+	}
+
 	@EventHandler
 	public void onClick(InventoryClickEvent e) {
 		if (!shouldCancelClick(e.getInventory()))
@@ -420,6 +470,34 @@ public class TownInventory implements Listener {
 			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 0.4f);
 		}
 
+		if (getPlotFlagInventories().values().contains(e.getInventory())) {
+			int slot = e.getRawSlot();
+			TownFlag flag;
+
+			if (slot >= TownFlag.values().length)
+				return;
+
+			flag = TownFlag.values()[slot];
+
+			Plot plot = TownManager.getInstance().getTown(getTown()).getPlot(p.getLocation().getChunk());
+
+			if (plot == null) {
+				p.closeInventory();
+				p.sendMessage(ChatColor.RED + "That wasn't supposed to happen...");
+				return;
+			}
+
+			if (plot.hasFlag(flag)) {
+				if (plot.getFlag(flag))
+					plot.setFlag(flag, false);
+				else
+					plot.removeFlag(flag);
+			} else
+				plot.setFlag(flag, true);
+
+			openPlotFlagInventory(plot);
+			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 0.4f);
+		}
 	}
 
 }

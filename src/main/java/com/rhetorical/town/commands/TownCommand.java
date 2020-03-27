@@ -827,6 +827,33 @@ public class TownCommand {
 
 			//todo: finish flags opening plot flag invnetory if allowed
 
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town t = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (t == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to set it's flags!");
+				return;
+			}
+
+			Plot plot = t.getPlot(p.getLocation().getChunk());
+			if (plot == null) {
+				p.sendMessage(ChatColor.RED + "That plot does not belong to your town!");
+				return;
+			}
+
+			if ((plot.getLeaser() != null && !plot.getLeaser().equals(p.getUniqueId())) && !t.getMayor().equals(p.getUniqueId())) {
+				p.sendMessage(ChatColor.RED + "You don't have permission to change this plot's flags!");
+				return;
+			}
+
+			p.openInventory(t.getInventory().openPlotFlagInventory(plot));
+
 			return;
 		}
 		else if (args[0].equalsIgnoreCase("list")) {

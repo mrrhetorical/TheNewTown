@@ -210,6 +210,10 @@ public class Plot {
 		flags.put(flag, value);
 	}
 
+	public boolean hasFlag(TownFlag flag) {
+		return getFlags().containsKey(flag);
+	}
+
 	public boolean getFlag(TownFlag flag) {
 		if (getFlags().containsKey(flag))
 			return getFlags().get(flag);
