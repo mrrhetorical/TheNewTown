@@ -86,6 +86,9 @@ public class CommandCompleter implements TabCompleter {
 			if (checkPerm(sender, TownCommand.CommandData.MAP))
 				list.add("map");
 
+			if (checkPerm(sender, TownCommand.CommandData.Border))
+				list.add("border");
+
 			if (sender instanceof Player) {
 				if (!sender.isOp() || sender.hasPermission("t.admin")) {
 					Town town = TownManager.getInstance().getTownOfPlayer(((Player) sender).getUniqueId());
@@ -122,6 +125,11 @@ public class CommandCompleter implements TabCompleter {
 			}
 
 			if (args[0].equalsIgnoreCase("map") && checkPerm(sender, TownCommand.CommandData.MAP)) {
+				list.add("auto");
+				return list;
+			}
+
+			if (args[0].equalsIgnoreCase("border") && checkPerm(sender, TownCommand.CommandData.Border)) {
 				list.add("auto");
 				return list;
 			}

@@ -4,11 +4,9 @@ import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 import java.util.HashMap;
@@ -225,5 +223,51 @@ public class Plot {
 		return flags.remove(flag);
 	}
 
+	public void playBorderParticle(Town town, int height, Player p) {
+
+		Particle particle = Particle.REDSTONE;
+
+		Particle.DustOptions dustOptions = new Particle.DustOptions(town.getResidents().contains(p.getUniqueId()) ? BorderManager.getInstance().getSelf().getColor() : BorderManager.getInstance().getNeutral().getColor(), 2f);
+
+
+		World world = Bukkit.getWorld(getWorldName());
+		Chunk chunk = world.getChunkAt(getX(), getZ());
+
+		//north
+
+		if (town.getPlot(getWorldName(), getX(), getZ() + 1) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(i, height, 15).getLocation();
+				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//south
+
+		if (town.getPlot(getWorldName(), getX(), getZ() - 1) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(i, height, 0).getLocation();
+				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//east
+
+		if (town.getPlot(getWorldName(), getX() + 1, getZ()) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(15, height, i).getLocation();
+				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//west
+
+		if (town.getPlot(getWorldName(), getX() - 1, getZ()) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(0, height, i).getLocation();
+				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+			}
+		}
+	}
 
 }
