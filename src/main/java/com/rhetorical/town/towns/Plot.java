@@ -227,8 +227,11 @@ public class Plot {
 
 		Particle particle = Particle.REDSTONE;
 
-		Particle.DustOptions dustOptions = new Particle.DustOptions(town.getResidents().contains(p.getUniqueId()) ? BorderManager.getInstance().getSelf().getColor() : BorderManager.getInstance().getNeutral().getColor(), 2f);
+		boolean isSelfTown = town.getResidents().contains(p.getUniqueId());
 
+		Particle.DustOptions dustOptions = new Particle.DustOptions(isSelfTown ? BorderManager.getInstance().getSelf().getColor() : BorderManager.getInstance().getNeutral().getColor(), 2f);
+
+		int borderHeight = isSelfTown ? BorderManager.getInstance().getSelf().getHeight() : BorderManager.getInstance().getNeutral().getHeight();
 
 		World world = Bukkit.getWorld(getWorldName());
 		Chunk chunk = world.getChunkAt(getX(), getZ());
@@ -238,7 +241,8 @@ public class Plot {
 		if (town.getPlot(getWorldName(), getX(), getZ() + 1) == null) {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(i, height, 15).getLocation();
-				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -247,7 +251,8 @@ public class Plot {
 		if (town.getPlot(getWorldName(), getX(), getZ() - 1) == null) {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(i, height, 0).getLocation();
-				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -256,7 +261,8 @@ public class Plot {
 		if (town.getPlot(getWorldName(), getX() + 1, getZ()) == null) {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(15, height, i).getLocation();
-				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -265,7 +271,8 @@ public class Plot {
 		if (town.getPlot(getWorldName(), getX() - 1, getZ()) == null) {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(0, height, i).getLocation();
-				p.spawnParticle(particle, loc.getX(), height, loc.getZ(), 1, dustOptions);
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 	}
