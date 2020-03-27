@@ -1,10 +1,7 @@
 package com.rhetorical.town.commands;
 
 import com.rhetorical.town.TheNewTown;
-import com.rhetorical.town.towns.MapManager;
-import com.rhetorical.town.towns.Plot;
-import com.rhetorical.town.towns.Town;
-import com.rhetorical.town.towns.TownManager;
+import com.rhetorical.town.towns.*;
 import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
 import com.rhetorical.town.util.Position;
@@ -41,7 +38,8 @@ public class TownCommand {
 		SetHome(ChatColor.YELLOW + "/t sethome" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the home for the town. (m)", "tnt.home"), // done
 		Home(ChatColor.YELLOW + "/t home" + ChatColor.RED + " - " + ChatColor.WHITE + "Teleports you to the home for the town.", "tnt.home"), // done
 		Kick(ChatColor.YELLOW + "/t kick [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Kicks a player from your town. (m)", "tnt.kick"),
-		MAP(ChatColor.YELLOW + "/t map (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a map of the surrounding chunks. Auto automatically updates the map.", "tnt.map"); // done
+		MAP(ChatColor.YELLOW + "/t map (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a map of the surrounding chunks. 'Auto' automatically updates the map.", "tnt.map"),
+		Border(ChatColor.YELLOW + "/t border (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a border of your town. 'Auto' automatically updates the border with changes in height.", "tnt.map"); // done
 
 		private String message,
 				permission;
@@ -825,8 +823,6 @@ public class TownCommand {
 			if (!checkPerm(sender, CommandData.Flags))
 				return;
 
-			//todo: finish flags opening plot flag invnetory if allowed
-
 			if (!(sender instanceof Player)) {
 				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
 				return;
@@ -962,7 +958,7 @@ public class TownCommand {
 			return;
 		}
 		else if (args[0].equalsIgnoreCase("map")) {
-			if (!checkPerm(sender, CommandData.SetHome))
+			if (!checkPerm(sender, CommandData.MAP))
 				return;
 
 			if (!(sender instanceof Player)) {
@@ -984,8 +980,37 @@ public class TownCommand {
 
 
 
-		}
-		else {
+		} else if (args[0].equalsIgnoreCase("border")) {
+			if (!checkPerm(sender, CommandData.Border))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			if (args.length == 2) {
+				if (args[1].equalsIgnoreCase("auto")) {
+					BorderManager.getInstance().autoShowBorder(p);
+					sender.sendMessage(ChatColor.GREEN + String.format("Auto show borders is now %s!", BorderManager.getInstance().isAutoShowBorder(p) ? "enabled" : "disabled"));
+					return;
+				}
+
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t border (auto)");
+				return;
+			}
+
+			BorderManager.getInstance().showBorder(p);
+		} else {
 			if (sender instanceof Player) {
 				Player p = (Player) sender;
 				Town t = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());

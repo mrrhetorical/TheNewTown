@@ -4,11 +4,9 @@ import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 import java.util.HashMap;
@@ -225,5 +223,58 @@ public class Plot {
 		return flags.remove(flag);
 	}
 
+	public void playBorderParticle(Town town, int height, Player p) {
+
+		Particle particle = Particle.REDSTONE;
+
+		boolean isSelfTown = town.getResidents().contains(p.getUniqueId());
+
+		Particle.DustOptions dustOptions = new Particle.DustOptions(isSelfTown ? BorderManager.getInstance().getSelf().getColor() : BorderManager.getInstance().getNeutral().getColor(), 2f);
+
+		int borderHeight = isSelfTown ? BorderManager.getInstance().getSelf().getHeight() : BorderManager.getInstance().getNeutral().getHeight();
+
+		World world = Bukkit.getWorld(getWorldName());
+		Chunk chunk = world.getChunkAt(getX(), getZ());
+
+		//north
+
+		if (town.getPlot(getWorldName(), getX(), getZ() + 1) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(i, height, 15).getLocation();
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//south
+
+		if (town.getPlot(getWorldName(), getX(), getZ() - 1) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(i, height, 0).getLocation();
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//east
+
+		if (town.getPlot(getWorldName(), getX() + 1, getZ()) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(15, height, i).getLocation();
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
+			}
+		}
+
+		//west
+
+		if (town.getPlot(getWorldName(), getX() - 1, getZ()) == null) {
+			for (int i = 0; i < 16; i++) {
+				Location loc = chunk.getBlock(0, height, i).getLocation();
+				for (int h = 0; h < borderHeight; h++)
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
+			}
+		}
+	}
 
 }

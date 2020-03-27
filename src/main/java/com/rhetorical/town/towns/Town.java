@@ -10,6 +10,7 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -264,6 +265,15 @@ public class Town {
 		return null;
 	}
 
+	public Plot getPlot(String worldName, int x, int z) {
+		for (Plot plot : getPlots()) {
+			if (plot.getX() == x && plot.getZ() == z && plot.getWorldName().equalsIgnoreCase(worldName))
+				return plot;
+		}
+
+		return null;
+	}
+
 	public boolean addPlayer(UUID target) {
 		if (getResidents().contains(target))
 			return false;
@@ -404,6 +414,17 @@ public class Town {
 
 	public void setFlag(TownFlag flag, boolean value) {
 		getFlags().put(flag, value);
+	}
+
+	public void showBorder(Player player) {
+
+		int borderDistance = 40000;
+
+		for (Plot plot : getPlots()) {
+			Chunk chunk = Bukkit.getWorld(plot.getWorldName()).getChunkAt(plot.getX(), plot.getZ());
+			if (player.getLocation().distanceSquared(chunk.getBlock(0, player.getLocation().getBlockY(), 0).getLocation()) < 40000)
+				plot.playBorderParticle(this, (int) player.getLocation().getY(), player);
+		}
 	}
 
 }
