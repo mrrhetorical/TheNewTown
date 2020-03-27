@@ -39,10 +39,10 @@ public class BorderManager {
 	private BorderManager() {
 		FileConfiguration config = TheNewTown.getInstance().getConfig();
 
-		self = new BorderSettings (Color.fromRGB(config.getInt("border.self.color")), config.getInt("border.self.height"));
-		friendly = new BorderSettings (Color.fromRGB(config.getInt("border.friendly.color")), config.getInt("border.friendly.height"));
-		neutral = new BorderSettings (Color.fromRGB(config.getInt("border.neutral.color")), config.getInt("border.neutral.height"));
-		hostile = new BorderSettings (Color.fromRGB(config.getInt("border.hostile.color")), config.getInt("border.hostile.height"));
+		self = new BorderSettings (Color.fromRGB(config.getInt("border.self.color")), clamp(config.getInt("border.self.height"), 1, 5));
+		friendly = new BorderSettings (Color.fromRGB(config.getInt("border.friendly.color")), clamp(config.getInt("border.friendly.height"), 1, 5));
+		neutral = new BorderSettings (Color.fromRGB(config.getInt("border.neutral.color")), clamp(config.getInt("border.neutral.height"), 1, 5));
+		hostile = new BorderSettings (Color.fromRGB(config.getInt("border.hostile.color")), clamp(config.getInt("border.hostile.height"), 1, 5));
 	}
 
 	public static BorderManager getInstance() {
@@ -103,5 +103,10 @@ public class BorderManager {
 
 	public BorderSettings getHostile() {
 		return hostile;
+	}
+
+
+	private static int clamp(int value, int min, int max) {
+		return value > max ? max : value < min ? min : value;
 	}
 }

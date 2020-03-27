@@ -242,7 +242,7 @@ public class Plot {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(i, height, 15).getLocation();
 				for (int h = 0; h < borderHeight; h++)
-					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -252,7 +252,7 @@ public class Plot {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(i, height, 0).getLocation();
 				for (int h = 0; h < borderHeight; h++)
-					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -262,7 +262,7 @@ public class Plot {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(15, height, i).getLocation();
 				for (int h = 0; h < borderHeight; h++)
-					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 
@@ -272,7 +272,7 @@ public class Plot {
 			for (int i = 0; i < 16; i++) {
 				Location loc = chunk.getBlock(0, height, i).getLocation();
 				for (int h = 0; h < borderHeight; h++)
-					p.spawnParticle(particle, loc.getX(), height + h, loc.getZ(), 1, dustOptions);
+					p.spawnParticle(particle, loc.getX(), (height - (borderHeight >> 1)) + h, loc.getZ(), 1, dustOptions);
 			}
 		}
 	}
