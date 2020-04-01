@@ -995,13 +995,6 @@ public class TownCommand {
 
 			Player p = (Player) sender;
 
-			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
-
-			if (town == null) {
-				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
-				return;
-			}
-
 			if (args.length == 2) {
 				if (args[1].equalsIgnoreCase("auto")) {
 					BorderManager.getInstance().autoShowBorder(p);
