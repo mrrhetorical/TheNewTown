@@ -3,9 +3,10 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.towns.war.WarManager;
+import com.rhetorical.town.util.DateTimeConverter;
 import com.rhetorical.town.util.Position;
 import com.rhetorical.town.util.WorldGuardUtil;
-import javafx.util.converter.LocalDateTimeStringConverter;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -29,6 +30,8 @@ public class Town {
 
 	private float tax = 0f;
 
+	private double bank = 0f;
+
 	private LocalDateTime lastTaxPeriod;
 	private LocalDateTime lastUpkeepPeriod;
 
@@ -37,6 +40,8 @@ public class Town {
 	private Position home;
 
 	private TownInventory inventory;
+
+	private Set<String> allies = new HashSet<>();
 
 	/**
 	 * Used in town loading.
@@ -62,10 +67,9 @@ public class Town {
 
 		setTax((float) file.getData().getDouble(name + ".tax"));
 
-		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
 
-		lastTaxPeriod = converter.fromString(file.getData().getString(getName() + ".lastTaxPeriod"));
-		lastUpkeepPeriod = converter.fromString(file.getData().getString(getName() + ".lastUpkeepPeriod"));
+		lastTaxPeriod = DateTimeConverter.convert(file.getData().getString(getName() + ".lastTaxPeriod"));
+		lastUpkeepPeriod = DateTimeConverter.convert(file.getData().getString(getName() + ".lastUpkeepPeriod"));
 
 		String pos = file.getData().getString(getName() + ".home");
 		if (pos != null) {
@@ -90,6 +94,9 @@ public class Town {
 			if (!getFlags().containsKey(flag))
 				getFlags().put(flag, flag.getDefaultValue());
 
+		allies = new HashSet<>(file.getData().getStringList(getName() + ".allies"));
+
+		bank = file.getData().getDouble(getName() + ".balance");
 
 		inventory = new TownInventory(getName());
 	}
@@ -154,11 +161,12 @@ public class Town {
 
 		file.getData().set(getName() + ".home", getHome() != null ? getHome().toString() : "none");
 
-		LocalDateTimeStringConverter converter = new LocalDateTimeStringConverter();
 
-		file.getData().set(getName() + ".lastTaxPeriod", converter.toString(lastTaxPeriod));
+		file.getData().set(getName() + ".lastTaxPeriod", DateTimeConverter.convert(lastTaxPeriod));
 
-		file.getData().set(getName() + ".lastUpkeepPeriod", converter.toString(lastUpkeepPeriod));
+		file.getData().set(getName() + ".lastUpkeepPeriod", DateTimeConverter.convert(lastUpkeepPeriod));
+
+		file.getData().set(getName() + ".allies", new ArrayList<>(getAllies()));
 
 		file.getData().set(getName() + ".plots", null);
 
@@ -214,6 +222,18 @@ public class Town {
 
 	public TownInventory getInventory() {
 		return inventory;
+	}
+
+	public Set<String> getAllies() {
+		return allies;
+	}
+
+	public double getBank() {
+		return bank;
+	}
+
+	public void setBank(double value) {
+		bank = value;
 	}
 
 	public boolean addPlot(Chunk chunk) {
@@ -368,17 +388,22 @@ public class Town {
 				collected += plot.collectRent();
 			}
 
-			EconomyResponse r = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(getMayor()), collected);
-			if (!r.transactionSuccess())
-				Bukkit.getLogger().severe("Could not deposit money into mayor of " + getName() + "'s account!");
+			setBank(getBank() + collected);
+
+//			EconomyResponse r = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(getMayor()), collected);
+//			if (!r.transactionSuccess())
+//				Bukkit.getLogger().severe("Could not deposit money into mayor of " + getName() + "'s account!");
 		}
 
 		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) >= TownManager.getInstance().getUpkeepPeriod()) {
 			lastUpkeepPeriod = now;
 
-			EconomyResponse tax = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getMayor()), (double) TownManager.getInstance().getUpkeep(this));
-			if (!tax.transactionSuccess())
+//			EconomyResponse tax = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getMayor()), (double) TownManager.getInstance().getUpkeep(this));
+			double resultantBalance = getBank() - TownManager.getInstance().getUpkeep(this);
+			if (resultantBalance < 0f)
 				demote();
+			else
+				setBank(resultantBalance);
 
 		}
 
@@ -425,6 +450,52 @@ public class Town {
 			if (player.getLocation().distanceSquared(chunk.getBlock(0, player.getLocation().getBlockY(), 0).getLocation()) < 40000)
 				plot.playBorderParticle(this, (int) player.getLocation().getY(), player);
 		}
+	}
+
+	public boolean isAlly(String town) {
+		return getAllies().contains(town);
+	}
+
+	public boolean addAlly(String town) {
+		if (!WarManager.getInstance().isAtWar(getName(), town)) {
+			getAllies().add(town);
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isTownAdmin(UUID target) {
+		return getMayor().equals(target); //todo: include town deputies in future
+	}
+
+	public boolean withdrawFromBank(UUID target, float amount) {
+		if (getBank() - amount <= 0f)
+			return false;
+
+		if (!isTownAdmin(target))
+			return false;
+
+		EconomyResponse request = TheNewTown.getInstance().getEconomy().depositPlayer(Bukkit.getOfflinePlayer(target), amount);
+		if (!request.transactionSuccess())
+			return false;
+
+		setBank(getBank() - amount);
+
+		return true;
+	}
+
+	public boolean depositToBank(UUID target, float amount) {
+		if (!isTownAdmin(target))
+			return false;
+
+		EconomyResponse request = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(target), amount);
+		if (!request.transactionSuccess())
+			return false;
+
+		setBank(getBank() + amount);
+
+		return true;
 	}
 
 }

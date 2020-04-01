@@ -28,6 +28,9 @@ public class TownCommand {
 		Unclaim(ChatColor.YELLOW + "/t unclaim" + ChatColor.RED + " - " + ChatColor.WHITE + "Unclaims the plot you're standing in from your town. (m)", "tnt.unclaim"), // done
 		Sell(ChatColor.YELLOW + "/t sell [cost]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sells the current plot for the given price. A cost of -1 removes from market. (m)", "tnt.sell"), // done
 		Buy(ChatColor.YELLOW + "/t lease (release)" + ChatColor.RED + " - " + ChatColor.WHITE + "Leases the current plot from the town or releases lease.", "tnt.lease"), // done
+		Deposit(ChatColor.YELLOW + "/t deposit [amount]" + ChatColor.RED + " - " + ChatColor.WHITE + "Deposits money to the town bank.", "tnt.deposit"),
+		Withdraw(ChatColor.YELLOW + "/t withdraw [amount]" + ChatColor.RED + " - " + ChatColor.WHITE + "Withdraws money from the town bank.", "tnt.withdraw"),
+		Balance(ChatColor.YELLOW + "/t balance" + ChatColor.RED + " - " + ChatColor.WHITE + "Checks the balance of your town.", "tnt.balance"),
 		Flag(ChatColor.YELLOW + "/t flag [plot/town] [flag] [true/false/clear]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the flag for the given plot or town. (m)", "tnt.flag"), // done
 		Flags(ChatColor.YELLOW + "/t flags" + ChatColor.RED + " - " + ChatColor.WHITE + "Attempts to open the flag override gui for the current plot.", "tnt.flag"),
 		Tax(ChatColor.YELLOW + "/t tax [value]" + ChatColor.RED + " - " + ChatColor.WHITE + "Sets the tax rate for your town. (m)", "tnt.tax"), // done
@@ -487,6 +490,7 @@ public class TownCommand {
 			sender.sendMessage("##### [Town Info] #####");
 			sender.sendMessage(String.format("Town: %s", town.getName()));
 			sender.sendMessage(String.format("Mayor: %s", Bukkit.getOfflinePlayer(town.getMayor()).getName()));
+			sender.sendMessage(String.format("Wealth: %s", town.getBank()));
 			sender.sendMessage(String.format("Size: %s (%s)", town.getTownType().getReadable(), town.getPlots().size()));
 			sender.sendMessage(String.format("Residents: %s", town.getResidents().size()));
 			float dailyTax = town.getTax() * (24f / (float) TownManager.getInstance().getTaxPeriod());
@@ -1010,6 +1014,111 @@ public class TownCommand {
 			}
 
 			BorderManager.getInstance().showBorder(p);
+		} else if (args[0].equalsIgnoreCase("balance")) {
+			if (!checkPerm(sender, CommandData.Balance))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			sender.sendMessage(ChatColor.BOLD + "" + ChatColor.GOLD + town.getName() + "'s balance: " + ChatColor.GREEN + "$" + town.getBank());
+
+		} else if (args[0].equalsIgnoreCase("deposit")) {
+			if (!checkPerm(sender, CommandData.Balance))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t deposit [amount]");
+				return;
+			}
+
+			float amount;
+
+			try {
+				amount = Float.parseFloat(args[1]);
+			} catch (Error|Exception e) {
+				sender.sendMessage(ChatColor.RED + "Amount to deposit must be a number!");
+				return;
+			}
+
+			EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(p, amount);
+			if (!response.transactionSuccess())
+				sender.sendMessage(ChatColor.RED + String.format("Could not deposit $%s to your town's bank!", amount));
+			else {
+				town.setBank(town.getBank() + amount);
+				town.save();
+				sender.sendMessage(ChatColor.GREEN + String.format("Successfully deposited $%s into your town's bank! New balance: $%s", amount, town.getBank()));
+			}
+		} else if (args[0].equalsIgnoreCase("withdraw")) {
+			if (!checkPerm(sender, CommandData.Balance))
+				return;
+
+			if (!(sender instanceof Player)) {
+				sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+				return;
+			}
+
+			Player p = (Player) sender;
+
+			Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+			if (town == null) {
+				p.sendMessage(ChatColor.RED + "You must belong to a town to use this command!");
+				return;
+			}
+
+			if (args.length != 2) {
+				sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t deposit [amount]");
+				return;
+			}
+
+			float amount;
+
+			try {
+				amount = Float.parseFloat(args[1]);
+			} catch (Error|Exception e) {
+				sender.sendMessage(ChatColor.RED + "Amount to withdraw must be a number!");
+				return;
+			}
+
+			if (town.getBank() - amount < 0f) {
+				sender.sendMessage(ChatColor.RED + "Your town's bank does not have the funds for you to withdraw that amount!");
+				return;
+			}
+
+			EconomyResponse response = TheNewTown.getInstance().getEconomy().depositPlayer(p, amount);
+			if (!response.transactionSuccess())
+				sender.sendMessage(ChatColor.RED + String.format("Could not withdraw $%s to your town's bank!", amount));
+			else {
+				town.setBank(town.getBank() - amount);
+				town.save();
+				sender.sendMessage(ChatColor.GREEN + String.format("Successfully withdrew $%s from your town's bank! New balance: $%s", amount, town.getBank()));
+			}
 		} else {
 			if (sender instanceof Player) {
 				Player p = (Player) sender;

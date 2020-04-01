@@ -89,6 +89,15 @@ public class CommandCompleter implements TabCompleter {
 			if (checkPerm(sender, TownCommand.CommandData.Border))
 				list.add("border");
 
+			if (checkPerm(sender, TownCommand.CommandData.Balance))
+				list.add("balance");
+
+			if (checkPerm(sender, TownCommand.CommandData.Withdraw))
+				list.add("withdraw");
+
+			if (checkPerm(sender, TownCommand.CommandData.Deposit))
+				list.add("deposit");
+
 			if (sender instanceof Player) {
 				if (!sender.isOp() || sender.hasPermission("t.admin")) {
 					Town town = TownManager.getInstance().getTownOfPlayer(((Player) sender).getUniqueId());
