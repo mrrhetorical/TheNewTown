@@ -447,7 +447,7 @@ public class Town {
 
 		for (Plot plot : getPlots()) {
 			Chunk chunk = Bukkit.getWorld(plot.getWorldName()).getChunkAt(plot.getX(), plot.getZ());
-			if (player.getLocation().distanceSquared(chunk.getBlock(0, player.getLocation().getBlockY(), 0).getLocation()) < 40000)
+			if (player.getLocation().distanceSquared(chunk.getBlock(0, player.getLocation().getBlockY(), 0).getLocation()) < borderDistance)
 				plot.playBorderParticle(this, (int) player.getLocation().getY(), player);
 		}
 	}
