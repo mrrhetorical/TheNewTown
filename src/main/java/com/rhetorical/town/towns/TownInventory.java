@@ -3,6 +3,8 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.towns.flags.TownFlag;
 import com.rhetorical.town.towns.invite.InviteManager;
+import com.rhetorical.town.util.TownInventoryHolder;
+import com.rhetorical.town.util.TownMenuGroup;
 import org.bukkit.*;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
@@ -13,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -24,8 +27,8 @@ public class TownInventory implements Listener {
 
 	private String town;
 	private Inventory menu, infoMenu, flags;
-	private List<Inventory> invite = new ArrayList<>();
-	private List<Inventory> members = new ArrayList<>();
+	private Inventory invite;
+	private Inventory members;
 
 	private ItemStack back, next, prev, close;
 
@@ -103,12 +106,12 @@ public class TownInventory implements Listener {
 		return flags;
 	}
 
-	public Inventory getInviteInventory(int page) {
-		return invite.get(page);
+	public Inventory getInviteInventory() {
+		return invite;
 	}
 
-	public Inventory getMembersInventory(int page) {
-		return members.get(page);
+	public Inventory getMembersInventory() {
+		return members;
 	}
 
 	public Map<Plot, Inventory> getPlotFlagInventories() {
@@ -116,11 +119,14 @@ public class TownInventory implements Listener {
 	}
 
 	private boolean shouldCancelClick(Inventory inventory) {
-		return (invite != null && invite.contains(inventory)) || (members != null && members.contains(inventory)) || (menu != null && menu.equals(inventory)) || (infoMenu != null && infoMenu.equals(inventory)) || (flags != null && flags.equals(inventory) || getPlotFlagInventories().values().contains(inventory));
+		InventoryHolder holder = inventory.getHolder();
+		if (!(holder instanceof TownInventoryHolder))
+			return false;
+		return ((TownInventoryHolder) holder).isShouldCancelClick();
 	}
 
 	public void setupMenu() {
-		menu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown());
+		menu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown());
 
 		ItemStack info = new ItemStack(Material.PAPER);
 		ItemMeta infoMeta = info.getItemMeta();
@@ -146,11 +152,11 @@ public class TownInventory implements Listener {
 		getMenu().setItem(15, flagsItem);
 		getMenu().setItem(26, close);
 
-		flags = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Flags");
+		flags = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Flags");
 	}
 
 	public void setupInfoMenu() {
-		infoMenu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Information");
+		infoMenu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Information");
 
 		Town town = TownManager.getInstance().getTown(getTown());
 		if (town == null)
@@ -211,7 +217,8 @@ public class TownInventory implements Listener {
 
 	public void setupInviteMenu() {
 
-		invite.clear();
+		invite = null;
+		//todo: possible GC required on inventory prev and next links
 
 		List<Player> poss = new ArrayList<>(Bukkit.getOnlinePlayers());
 		Town t = TownManager.getInstance().getTown(getTown());
@@ -220,8 +227,20 @@ public class TownInventory implements Listener {
 				poss.remove(p);
 
 		int numPages =  (int) Math.ceil((float) poss.size() / 27f);
+
+		Inventory prevPage = null;
+
+		numPages = numPages == 0 ? 1 : numPages;
+
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(null, 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.INVITE), 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+
+			if (prevPage != null)
+				if (prevPage.getHolder() instanceof TownInventoryHolder) {
+					((TownInventoryHolder) prevPage.getHolder()).setNextPage(inv);
+				}
+
+			prevPage = inv;
 
 			for(int k = 0; k < 27 && !poss.isEmpty(); k++) {
 				ItemStack skull = new ItemStack(Material.SKELETON_SKULL);
@@ -248,19 +267,33 @@ public class TownInventory implements Listener {
 
 			inv.setItem(31, back);
 
-			invite.add(inv);
+			if (i == 0)
+				invite = inv;
 		}
 	}
 
 	public void setupMembersMenu() {
 
-		members.clear();
+		members = null;
+		//todo: same possible GC memory leak as above
 
 		List<UUID> poss = new ArrayList<>(TownManager.getInstance().getTown(getTown()).getResidents());
 
+		Inventory prevPage = null;
+
 		int numPages =  (int) Math.ceil((float) poss.size() / 27f);
+
+		numPages = numPages == 0 ? 1 : numPages;
+
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(null, 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.MEMBER_LIST), 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+
+			if (prevPage != null)
+				if (prevPage.getHolder() instanceof TownInventoryHolder) {
+					((TownInventoryHolder) prevPage.getHolder()).setNextPage(inv);
+				}
+
+			prevPage = inv;
 
 			for(int k = 0; k < 27 && !poss.isEmpty(); k++) {
 				ItemStack skull = new ItemStack(Material.SKELETON_SKULL);
@@ -269,7 +302,10 @@ public class TownInventory implements Listener {
 					meta.setOwningPlayer(Bukkit.getOfflinePlayer(poss.get(0)));
 					meta.setDisplayName(ChatColor.YELLOW + Bukkit.getOfflinePlayer(poss.get(0)).getName());
 					List<String> lore = new ArrayList<>();
-					lore.add(ChatColor.RED + "[Click to Kick]");
+					if (!poss.get(0).equals(TownManager.getInstance().getTown(getTown()).getMayor()))
+						lore.add(ChatColor.RED + "[Click to Kick]");
+					else
+						lore.add(ChatColor.GREEN + "[Town Mayor]");
 					meta.setLore(lore);
 					poss.remove(0);
 				}
@@ -287,7 +323,8 @@ public class TownInventory implements Listener {
 
 			inv.setItem(31, back);
 
-			members.add(inv);
+			if (i == 0)
+				members = inv;
 		}
 	}
 
@@ -302,7 +339,7 @@ public class TownInventory implements Listener {
 
 	public Inventory openPlotFlagInventory(Plot plot) {
 
-		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(null, 27, ChatColor.GOLD + "Plot " + ChatColor.YELLOW + "(" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName() + ChatColor.GOLD + " - Flags");
+		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Plot " + ChatColor.YELLOW + "(" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName() + ChatColor.GOLD + " - Flags");
 
 		for (int i = 0; i < TownFlag.values().length; i++) {
 			TownFlag flag = TownFlag.values()[i];
@@ -367,15 +404,19 @@ public class TownInventory implements Listener {
 			if (e.getInventory().equals(getInfoMenu())) {
 				openMenu(p);
 				return;
-			} else if (invite.contains(e.getInventory())) {
-				openMenu(p);
-				return;
-			} else if (members.contains(e.getInventory())) {
-				openInfoMenu(p);
-				return;
 			} else if (e.getInventory().equals(getFlags())) {
 				openMenu(p);
 				return;
+			} else if (e.getInventory().getHolder() instanceof TownInventoryHolder) {
+				TownInventoryHolder holder = (TownInventoryHolder) e.getInventory().getHolder();
+				if (holder.getMenuGroup() == TownMenuGroup.MEMBER_LIST) {
+					openInfoMenu(p);
+					return;
+				} else if (holder.getMenuGroup() == TownMenuGroup.INVITE) {
+					openMenu(p);
+					return;
+				}
+
 			}
 		}
 
@@ -385,8 +426,8 @@ public class TownInventory implements Listener {
 				openInfoMenu((Player) e.getWhoClicked());
 			} else if (e.getRawSlot() == 13) {
 				setupInviteMenu();
-				if (!invite.isEmpty())
-					e.getWhoClicked().openInventory(invite.get(0));
+				if (invite != null)
+					e.getWhoClicked().openInventory(invite);
 			} else if (e.getRawSlot() == 15) {
 				setupFlagsMenu();
 				p.openInventory(getFlags());
@@ -397,62 +438,73 @@ public class TownInventory implements Listener {
 		if (e.getInventory().equals(getInfoMenu())) {
 			if (e.getRawSlot() == 16) {
 				setupMembersMenu();
-				if (!members.isEmpty())
-					p.openInventory(members.get(0));
+				if (members != null)
+					p.openInventory(members);
 			}
 		}
+
+		TownInventoryHolder holder = null;
+		if (e.getInventory().getHolder() instanceof TownInventoryHolder)
+			holder = (TownInventoryHolder) e.getInventory().getHolder();
+
 
 		//is invite menu
-		if (invite.contains(e.getInventory())) {
-			if (e.getCurrentItem() == null)
-				return;
+		if (holder != null)
+			if (holder.getMenuGroup() == TownMenuGroup.INVITE) {
+				if (e.getCurrentItem() == null)
+					return;
 
-			ItemStack item = e.getCurrentItem();
-			if (item.equals(prev)) {
-				p.openInventory(invite.get(invite.indexOf(e.getInventory()) - 1));
-			} else if (item.equals(next)) {
-				p.openInventory(invite.get(invite.indexOf(e.getInventory()) + 1));
-			}
+				ItemStack item = e.getCurrentItem();
+				if (item.equals(prev)) {
+					if (holder.getPrevPage() != null)
+						p.openInventory(holder.getPrevPage());
+				} else if (item.equals(next)) {
+					if (holder.getNextPage() != null)
+						p.openInventory(holder.getNextPage());
+				}
 
-			if (item.getItemMeta() instanceof SkullMeta) {
-				if (TownManager.getInstance().getTown(getTown()).getMayor().equals(p.getUniqueId())) {
-					SkullMeta meta = (SkullMeta) item.getItemMeta();
-					InviteManager.getInstance().generateRequest(e.getWhoClicked().getUniqueId(), meta.getOwningPlayer().getUniqueId(), TownManager.getInstance().getTownOfPlayer(e.getWhoClicked().getUniqueId()).getName());
-					openMenu(p);
-				} else {
-					p.sendMessage(ChatColor.RED + "You must be the mayor of a town to invite players!");
+				if (item.getItemMeta() instanceof SkullMeta) {
+					if (TownManager.getInstance().getTown(getTown()).getMayor().equals(p.getUniqueId())) {
+						SkullMeta meta = (SkullMeta) item.getItemMeta();
+						InviteManager.getInstance().generateRequest(e.getWhoClicked().getUniqueId(), meta.getOwningPlayer().getUniqueId(), TownManager.getInstance().getTownOfPlayer(e.getWhoClicked().getUniqueId()).getName());
+						openMenu(p);
+					} else {
+						p.sendMessage(ChatColor.RED + "You must be the mayor of a town to invite players!");
+					}
 				}
 			}
-		}
 
 		//is member menu
-		if (members.contains(e.getInventory())) {
-			ItemStack item = e.getCurrentItem();
-			if (item.equals(prev)) {
-				p.openInventory(members.get(members.indexOf(e.getInventory()) - 1));
-			} else if (item.equals(next)) {
-				p.openInventory(members.get(members.indexOf(e.getInventory()) + 1));
-			}
+		if (holder != null)
+			if (holder.getMenuGroup() == TownMenuGroup.MEMBER_LIST) {
+				ItemStack item = e.getCurrentItem();
+				if (item.equals(prev)) {
+					if (holder.getPrevPage() != null)
+						p.openInventory(holder.getPrevPage());
+				} else if (item.equals(next)) {
+					if (holder.getNextPage() != null)
+						p.openInventory(holder.getNextPage());
+				}
 
-			if (item.getItemMeta() instanceof SkullMeta) {
-				SkullMeta meta = (SkullMeta) item.getItemMeta();
-				Town t = TownManager.getInstance().getTown(getTown());
-				if (t.getMayor().equals(p.getUniqueId())) {
-					if (!t.getMayor().equals(meta.getOwningPlayer().getUniqueId())) {
-						if (t.removePlayer(meta.getOwningPlayer().getUniqueId())) {
-							p.sendMessage(ChatColor.GREEN + "Successfully kicked player from your town!");
-							t.save();
-						} else {
-							p.sendMessage(ChatColor.RED + "Could not kick player from your town!");
-						}
-					} else
-						p.sendMessage(ChatColor.RED + "You cannot kick yourself from your town!");
-					openMenu(p);
-				} else {
-					p.sendMessage(ChatColor.RED + "You must be the mayor of a town to kick players!");
+				if (item.getItemMeta() instanceof SkullMeta) {
+					SkullMeta meta = (SkullMeta) item.getItemMeta();
+					Town t = TownManager.getInstance().getTown(getTown());
+					if (t.getMayor().equals(p.getUniqueId())) {
+						if (!t.getMayor().equals(meta.getOwningPlayer().getUniqueId())) {
+							if (t.removePlayer(meta.getOwningPlayer().getUniqueId())) {
+								p.sendMessage(ChatColor.GREEN + "Successfully kicked player from your town!");
+								t.save();
+							} else {
+								p.sendMessage(ChatColor.RED + "Could not kick player from your town!");
+							}
+							p.openInventory(getInfoMenu());
+						} else
+							p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
+					} else {
+						p.sendMessage(ChatColor.RED + "You must be the mayor of a town to kick players!");
+					}
 				}
 			}
-		}
 
 		//is flags menu
 		if (e.getInventory().equals(getFlags())) {
