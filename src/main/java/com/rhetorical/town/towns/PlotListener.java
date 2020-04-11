@@ -1,6 +1,8 @@
 package com.rhetorical.town.towns;
 
 import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.util.EnterMessageLocation;
+import com.rhetorical.town.util.EnterMessageUtil;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -43,22 +45,22 @@ class PlotListener implements Listener {
 			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
 			Plot to = owner.getPlot(e.getTo().getChunk());
 			if (to.getLeaser() != null) {
-				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
+				EnterMessageUtil.sendMessage(e.getPlayer(), String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown()));
 				return;
 			} else if (to.isForSale()) {
-				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost())));
+				EnterMessageUtil.sendMessage(e.getPlayer(), ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost()));
 				return;
 			}
 			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk())) {
 				if (to.getLeaser() != null) {
-					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown())));
+					EnterMessageUtil.sendMessage(e.getPlayer(), String.format("Entering %s's plot in %s", Bukkit.getOfflinePlayer(to.getLeaser()).getName(), getPlot().getTown()));
 					return;
 				} else if (to.isForSale()) {
-					e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost())));
+					EnterMessageUtil.sendMessage(e.getPlayer(), ChatColor.YELLOW + String.format("This plot is for sale from %s for $%s!", getPlot().getTown(), getPlot().getCost()));
 					return;
 				}
 			} else {
-				e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Entering %s", getPlot().getTown())));
+				EnterMessageUtil.sendMessage(e.getPlayer(), String.format("Entering %s", getPlot().getTown()));
 			}
 		}
 		//Leaving
@@ -68,7 +70,7 @@ class PlotListener implements Listener {
 			Town owner = TownManager.getInstance().getTown(getPlot().getTown());
 			if (owner.isChunkClaimed(e.getTo().getChunk()) && owner.isChunkClaimed(e.getFrom().getChunk()))
 				return;
-			e.getPlayer().spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(String.format("Leaving %s", getPlot().getTown())));
+			EnterMessageUtil.sendMessage(e.getPlayer(), String.format("Leaving %s", getPlot().getTown()));
 		} else
 			return;
 	}

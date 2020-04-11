@@ -3,7 +3,6 @@ package com.rhetorical.town.towns.war;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.towns.InventorySystem;
 import com.rhetorical.town.towns.Town;
-import com.rhetorical.town.towns.TownInventory;
 import com.rhetorical.town.towns.TownManager;
 import com.rhetorical.town.util.TownInventoryHolder;
 import com.rhetorical.town.util.TownMenuGroup;
@@ -22,12 +21,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class WarInventory implements Listener, InventorySystem {
 

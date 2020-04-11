@@ -3,6 +3,7 @@ package com.rhetorical.town;
 import com.rhetorical.town.commands.CommandCompleter;
 import com.rhetorical.town.commands.TownCommand;
 import com.rhetorical.town.towns.TownManager;
+import com.rhetorical.town.util.EnterMessageLocation;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -27,6 +28,8 @@ public class TheNewTown extends JavaPlugin {
 	private final long landMultiplier = 10L;
 	private final long killMultiplier = 1L;
 
+	private EnterMessageLocation enterMessageLocation;
+
 	@Override
 	public void onEnable() {
 		if (instance != null)
@@ -40,6 +43,14 @@ public class TheNewTown extends JavaPlugin {
 		reloadConfig();
 
 		setCreationCost((float) getConfig().getDouble("creation_cost"));
+
+		String enterLocation = getConfig().getString("enterMessageLocation");
+		try {
+			setEnterMessageLocation(EnterMessageLocation.valueOf(enterLocation));
+		} catch (Exception e) {
+			Bukkit.getLogger().severe("Invalid enter message location: " + enterLocation);
+			setEnterMessageLocation(EnterMessageLocation.CHAT);
+		}
 
 		setupEconomy();
 
@@ -94,5 +105,13 @@ public class TheNewTown extends JavaPlugin {
 
 	public long getKillMultiplier() {
 		return killMultiplier;
+	}
+
+	public EnterMessageLocation getEnterMessageLocation() {
+		return enterMessageLocation;
+	}
+
+	public void setEnterMessageLocation(EnterMessageLocation enterMessageLocation) {
+		this.enterMessageLocation = enterMessageLocation;
 	}
 }
