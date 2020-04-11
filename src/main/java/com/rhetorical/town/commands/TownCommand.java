@@ -1059,8 +1059,7 @@ public class TownCommand {
 				return;
 			}
 
-			EconomyResponse response = TheNewTown.getInstance().getEconomy().withdrawPlayer(p, amount);
-			if (!response.transactionSuccess())
+			if (!town.depositToBank(p.getUniqueId(), amount))
 				sender.sendMessage(ChatColor.RED + String.format("Could not deposit $%s to your town's bank!", amount));
 			else {
 				town.setBank(town.getBank() + amount);
@@ -1104,9 +1103,8 @@ public class TownCommand {
 				return;
 			}
 
-			EconomyResponse response = TheNewTown.getInstance().getEconomy().depositPlayer(p, amount);
-			if (!response.transactionSuccess())
-				sender.sendMessage(ChatColor.RED + String.format("Could not withdraw $%s to your town's bank!", amount));
+			if (!town.withdrawFromBank(p.getUniqueId(), amount))
+				sender.sendMessage(ChatColor.RED + String.format("Could not withdraw $%s from your town's bank!", amount));
 			else {
 				town.setBank(town.getBank() - amount);
 				town.save();

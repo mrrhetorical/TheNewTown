@@ -8,6 +8,9 @@ period:
   # Time (in minutes) that the server will check up on upkeep timers. Values less than 5 not recommended, has minimal performance impact.
   checkup: 5
 
+#Enter message location: Where should the enter message be shown when entering / exiting plots? Valid options: ACTIONBAR, TITLE, SUBTITLE, CHAT
+enterMessageLocation: SUBTITLE
+
 # Border Colors: What color should the borders be to other towns given relation?
 border:
   self:
