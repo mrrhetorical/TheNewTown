@@ -12,6 +12,8 @@ public class TownInventoryHolder implements InventoryHolder {
 
 	private TownMenuGroup menuGroup;
 
+	private String townToJustifyAgaint;
+
 	public TownInventoryHolder(boolean shouldCancelClick) {
 		setShouldCancelClick(shouldCancelClick);
 		setMenuGroup(TownMenuGroup.SINGLE);
@@ -23,6 +25,13 @@ public class TownInventoryHolder implements InventoryHolder {
 		setPrevPage(prevPage);
 		setMenuGroup(group);
 	}
+
+	public TownInventoryHolder(boolean shouldCancelClick, String townToJustifyAgaint) {
+		setShouldCancelClick(shouldCancelClick);
+		setMenuGroup(TownMenuGroup.WAR_GOAL_CHOICE);
+		setTownToJustifyAgaint(townToJustifyAgaint);
+	}
+
 
 	private void setShouldCancelClick(boolean value) {
 		shouldCancelClick = value;
@@ -59,5 +68,13 @@ public class TownInventoryHolder implements InventoryHolder {
 
 	public void setMenuGroup(TownMenuGroup menuGroup) {
 		this.menuGroup = menuGroup;
+	}
+
+	public String getTownToJustifyAgaint() {
+		return townToJustifyAgaint;
+	}
+
+	public void setTownToJustifyAgaint(String townToJustifyAgaint) {
+		this.townToJustifyAgaint = townToJustifyAgaint;
 	}
 }

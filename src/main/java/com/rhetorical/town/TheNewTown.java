@@ -24,6 +24,9 @@ public class TheNewTown extends JavaPlugin {
 
 	private float creationCost = 1000f;
 
+	private final long landMultiplier = 10L;
+	private final long killMultiplier = 1L;
+
 	@Override
 	public void onEnable() {
 		if (instance != null)
@@ -83,5 +86,13 @@ public class TheNewTown extends JavaPlugin {
 		TownCommand.getInstance().onCommand(sender, cmd, label, args);
 
 		return true;
+	}
+
+	public long getLandMultiplier() {
+		return landMultiplier;
+	}
+
+	public long getKillMultiplier() {
+		return killMultiplier;
 	}
 }

@@ -23,7 +23,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.*;
 
-public class TownInventory implements Listener {
+public class TownInventory implements Listener, InventorySystem {
 
 	private String town;
 	private Inventory menu, infoMenu, flags;
@@ -126,7 +126,7 @@ public class TownInventory implements Listener {
 	}
 
 	public void setupMenu() {
-		menu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown());
+		menu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown());
 
 		ItemStack info = new ItemStack(Material.PAPER);
 		ItemMeta infoMeta = info.getItemMeta();
@@ -146,26 +146,31 @@ public class TownInventory implements Listener {
 		meta.addPattern(new Pattern(DyeColor.BLUE, PatternType.SQUARE_TOP_LEFT));
 		flagsItem.setItemMeta(meta);
 
+		ItemStack war = new ItemStack(Material.IRON_SWORD);
+		ItemMeta warMeta = war.getItemMeta();
+		warMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "War Menu");
+		war.setItemMeta(warMeta);
 
-		getMenu().setItem(11, info);
-		getMenu().setItem(13, invite);
-		getMenu().setItem(15, flagsItem);
-		getMenu().setItem(26, close);
+		getMenu().setItem(10, info);
+		getMenu().setItem(12, war);
+		getMenu().setItem(14, invite);
+		getMenu().setItem(16, flagsItem);
+		getMenu().setItem(22, close);
 
-		flags = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Flags");
+		flags = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Town-wide Flags");
 	}
 
 	public void setupInfoMenu() {
-		infoMenu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Town " + ChatColor.YELLOW + getTown() + " - Information");
+		infoMenu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Stats");
 
 		Town town = TownManager.getInstance().getTown(getTown());
 		if (town == null)
 			return;
 
-		ItemStack nameItem = new ItemStack(Material.NAME_TAG);
-		ItemMeta nameMeta = nameItem.getItemMeta();
-		nameMeta.setDisplayName(ChatColor.GOLD + "Name: " + ChatColor.YELLOW + getTown());
-		nameItem.setItemMeta(nameMeta);
+//		ItemStack nameItem = new ItemStack(Material.NAME_TAG);
+//		ItemMeta nameMeta = nameItem.getItemMeta();
+//		nameMeta.setDisplayName(ChatColor.GOLD + "Name: " + ChatColor.YELLOW + getTown());
+//		nameItem.setItemMeta(nameMeta);
 
 		ItemStack populationItem = new ItemStack(Material.POPPY);
 		ItemMeta populationMeta = populationItem.getItemMeta();
@@ -177,16 +182,34 @@ public class TownInventory implements Listener {
 		sizeMeta.setDisplayName(ChatColor.RED + "Size: " + ChatColor.YELLOW + town.getTownType().getReadable() + " " + ChatColor.WHITE + "(" + ChatColor.YELLOW + town.getPlots().size() + ChatColor.WHITE + ")");
 		sizeItem.setItemMeta(sizeMeta);
 
+		ItemStack financials = new ItemStack(Material.GOLD_NUGGET);
+		ItemMeta financialMeta = financials.getItemMeta();
+		financialMeta.setDisplayName("" + ChatColor.GOLD + ChatColor.BOLD + "Finances");
+		List<String> financialLore = new ArrayList<>();
+		financialLore.add(ChatColor.YELLOW + "Treasury balance: " + ChatColor.GREEN + "$" + town.getBank());
+		float nextUpkeep = TownManager.getInstance().getUpkeep(town);
+		nextUpkeep = Math.round(nextUpkeep * 100f) / 100f;
+		financialLore.add(ChatColor.YELLOW + "Next Upkeep Bill: " + ChatColor.GREEN + "$" + nextUpkeep);
+		financialLore.add(ChatColor.YELLOW + "Tax Rate: " + ChatColor.RED + "$" + town.getTax() + " / tax period");
+		float expectedRevenue = (town.getResidents().size() - 1) * town.getTax();
+		for (Plot plot : town.getPlots())
+			if (plot.getLeaser() != null)
+				expectedRevenue += plot.getCost();
+
+		expectedRevenue = Math.round(expectedRevenue * 100f) / 100f;
+		financialLore.add(ChatColor.YELLOW + "Expected Tax Revenue: " + (expectedRevenue >= nextUpkeep ? ChatColor.GREEN : ChatColor.RED) + "$" + expectedRevenue);
+		financialMeta.setLore(financialLore);
+		financials.setItemMeta(financialMeta);
+
 		ItemStack membersItem = new ItemStack(Material.SKELETON_SKULL);
 		ItemMeta membersMeta = membersItem.getItemMeta();
 		membersMeta.setDisplayName(ChatColor.YELLOW + "Member List");
 		membersItem.setItemMeta(membersMeta);
 
 
-		getInfoMenu().setItem(10, nameItem);
-		getInfoMenu().setItem(12, populationItem);
-		getInfoMenu().setItem(14, sizeItem);
-		getInfoMenu().setItem(16, membersItem);
+		getInfoMenu().setItem(11, financials);
+		getInfoMenu().setItem(13, sizeItem);
+		getInfoMenu().setItem(15, membersItem);
 		getInfoMenu().setItem(22, back);
 	}
 
@@ -233,7 +256,7 @@ public class TownInventory implements Listener {
 		numPages = numPages == 0 ? 1 : numPages;
 
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.INVITE), 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.INVITE), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Invite Players - (" + (i + 1) + "/" + numPages + ")");
 
 			if (prevPage != null)
 				if (prevPage.getHolder() instanceof TownInventoryHolder) {
@@ -286,7 +309,7 @@ public class TownInventory implements Listener {
 		numPages = numPages == 0 ? 1 : numPages;
 
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.MEMBER_LIST), 36, ChatColor.GOLD + "Invite Players - " + (i + 1));
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.MEMBER_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Member List - (" + (i + 1) + "/" + numPages + ")");
 
 			if (prevPage != null)
 				if (prevPage.getHolder() instanceof TownInventoryHolder) {
@@ -339,7 +362,7 @@ public class TownInventory implements Listener {
 
 	public Inventory openPlotFlagInventory(Plot plot) {
 
-		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.GOLD + "Plot " + ChatColor.YELLOW + "(" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName() + ChatColor.GOLD + " - Flags");
+		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "Flags for (" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName());
 
 		for (int i = 0; i < TownFlag.values().length; i++) {
 			TownFlag flag = TownFlag.values()[i];
@@ -351,7 +374,8 @@ public class TownInventory implements Listener {
 				meta.setDisplayName((status == 1 ? ChatColor.GREEN : status == 0 ? ChatColor.RED : ChatColor.GRAY) + flag.getName());
 				List<String> lore = new ArrayList<>();
 				lore.add("" + ChatColor.YELLOW + ChatColor.ITALIC + flag.getDescription());
-				lore.add(ChatColor.WHITE + "Status: " + (status == 1 ? ChatColor.GREEN + "Enabled" : status == 0 ? ChatColor.RED + "Disabled" : ChatColor.GRAY + "Inherits Town Flag"));
+				boolean inheritedValue = TownManager.getInstance().getTown(town).getFlag(flag);
+				lore.add(ChatColor.WHITE + "Status: " + (status == 1 ? ChatColor.GREEN + "Enabled" : status == 0 ? ChatColor.RED + "Disabled" : ChatColor.GRAY + "Inherits Town Flag (" + (inheritedValue ? ChatColor.GREEN + "enabled" : ChatColor.RED + "disabled") + ChatColor.GRAY + ")"));
 				meta.setLore(lore);
 			}
 			item.setItemMeta(meta);
@@ -422,21 +446,25 @@ public class TownInventory implements Listener {
 
 		//is menu
 		if (e.getInventory().equals(getMenu())) {
-			if (e.getRawSlot() == 11) {
+			if (e.getRawSlot() == 10) {
 				openInfoMenu((Player) e.getWhoClicked());
-			} else if (e.getRawSlot() == 13) {
+			} else if (e.getRawSlot() == 12) {
+				Town town = TownManager.getInstance().getTown(getTown());
+				p.openInventory(town.getWarInventory().getMenu());
+			} else if (e.getRawSlot() == 14) {
 				setupInviteMenu();
 				if (invite != null)
 					e.getWhoClicked().openInventory(invite);
-			} else if (e.getRawSlot() == 15) {
+			} else if (e.getRawSlot() == 16) {
 				setupFlagsMenu();
 				p.openInventory(getFlags());
 			}
 
 		}
 
+		//is info menu
 		if (e.getInventory().equals(getInfoMenu())) {
-			if (e.getRawSlot() == 16) {
+			if (e.getRawSlot() == 15) {
 				setupMembersMenu();
 				if (members != null)
 					p.openInventory(members);

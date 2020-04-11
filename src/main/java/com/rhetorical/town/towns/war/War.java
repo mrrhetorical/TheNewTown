@@ -17,7 +17,7 @@ public class War {
 	private LocalDateTime startTime;
 	private LocalDateTime endTime;
 
-	private WarGoal warGoal;
+	private WarGoalObjective warGoal;
 
 	private String attacker;
 	private String defender;
@@ -49,7 +49,7 @@ public class War {
 		try {
 			if (warGoalString == null)
 				throw new Exception();
-			warGoal = WarGoal.valueOf(warGoalString.toUpperCase());
+			warGoal = WarGoalObjective.valueOf(warGoalString.toUpperCase());
 		} catch (Exception e) {
 			Bukkit.getLogger().severe(String.format("Could not load war goal for war with id '%s'!", getId()));
 			return;
@@ -126,7 +126,7 @@ public class War {
 		return id;
 	}
 
-	public WarGoal getWarGoal() {
+	public WarGoalObjective getWarGoal() {
 		return warGoal;
 	}
 

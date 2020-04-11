@@ -3,11 +3,15 @@ package com.rhetorical.town.towns;
 import com.rhetorical.town.TheNewTown;
 import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.flags.TownFlag;
+import com.rhetorical.town.towns.war.WarGoal;
+import com.rhetorical.town.towns.war.WarGoalObjective;
+import com.rhetorical.town.towns.war.WarInventory;
 import com.rhetorical.town.towns.war.WarManager;
 import com.rhetorical.town.util.DateTimeConverter;
 import com.rhetorical.town.util.Position;
 import com.rhetorical.town.util.WorldGuardUtil;
 import net.milkbowl.vault.economy.EconomyResponse;
+import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,6 +30,8 @@ public class Town {
 
 	private List<UUID> residents = new ArrayList<>();
 
+	private List<WarGoal> activeWarGoals = new ArrayList<>();
+
 	private TownType townType;
 
 	private float tax = 0f;
@@ -40,6 +46,7 @@ public class Town {
 	private Position home;
 
 	private TownInventory inventory;
+	private WarInventory warInventory;
 
 	private Set<String> allies = new HashSet<>();
 
@@ -90,6 +97,20 @@ public class Town {
 				setFlag(flag, v);
 			}
 
+
+		ConfigurationSection w = file.getData().getConfigurationSection(getName() + ".warGoals");
+		if (f != null)
+			for (String key : f.getKeys(false)) {
+				long id;
+				try {
+					id = Long.parseLong(key);
+				} catch (Exception ignored) { continue; }
+
+				WarGoal goal = new WarGoal(id, getName(), file);
+				getActiveWarGoals().add(goal);
+			}
+
+
 		for (TownFlag flag : TownFlag.values())
 			if (!getFlags().containsKey(flag))
 				getFlags().put(flag, flag.getDefaultValue());
@@ -99,6 +120,7 @@ public class Town {
 		bank = file.getData().getDouble(getName() + ".balance");
 
 		inventory = new TownInventory(getName());
+		warInventory = new WarInventory(getName());
 	}
 
 	/**
@@ -177,6 +199,11 @@ public class Town {
 			plot.save(getName(), file);
 		}
 
+		for (WarGoal goal : getActiveWarGoals()) {
+			String base = getName() + ".warGoals." + goal.getId();
+			goal.save(file, base);
+		}
+
 		file.saveData();
 	}
 
@@ -224,6 +251,10 @@ public class Town {
 		return inventory;
 	}
 
+	public WarInventory getWarInventory() {
+		return warInventory;
+	}
+
 	public Set<String> getAllies() {
 		return allies;
 	}
@@ -234,6 +265,10 @@ public class Town {
 
 	public void setBank(double value) {
 		bank = value;
+	}
+
+	public List<WarGoal> getActiveWarGoals() {
+		return activeWarGoals;
 	}
 
 	public boolean addPlot(Chunk chunk) {
@@ -318,6 +353,7 @@ public class Town {
 			plot.unregister();
 		}
 		inventory.unregister();
+		warInventory.unregister();
 	}
 
 	public TownType getTownType() {
@@ -481,6 +517,7 @@ public class Town {
 			return false;
 
 		setBank(getBank() - amount);
+		save();
 
 		return true;
 	}
@@ -494,8 +531,61 @@ public class Town {
 			return false;
 
 		setBank(getBank() + amount);
+		save();
 
 		return true;
+	}
+
+	public long getWarPower() {
+		return getPlots().size() * TheNewTown.getInstance().getLandMultiplier();
+	}
+
+	public boolean createWarGoal(String target, WarGoalObjective objective) {
+		if (WarManager.getInstance().isAtWar(target) || WarManager.getInstance().isAtWar(getName()))
+			return false;
+
+		for (WarGoal goal : getActiveWarGoals())
+			if (goal.getTarget().equalsIgnoreCase(target))
+				return false;
+
+		WarGoal goal = new WarGoal(getName(), target, objective, TownFile.open(), getName() + ".warGoals");
+		getActiveWarGoals().add(goal);
+		save();
+		return true;
+	}
+
+	public void cancelWarGoal(long id) {
+		for (WarGoal goal : new ArrayList<>(getActiveWarGoals())) {
+			if (goal.getId() == id) {
+				getActiveWarGoals().remove(goal);
+				TownFile file = TownFile.open();
+				file.getData().set(getName() + ".warGoals." + id, null);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Gets a list of all towns currently justifying a war goal against this town.
+	 * */
+	public List<Town> getTargetingTowns() {
+		List<Town> targeting = new ArrayList<>();
+		for (Town t : TownManager.getInstance().getTowns().values()) {
+			for (WarGoal goal : t.getActiveWarGoals()) {
+				if (goal.getTarget().equalsIgnoreCase(getName())) {
+					targeting.add(t);
+					break;
+				}
+			}
+		}
+		return targeting;
+	}
+
+	/**
+	 * Starts a war given the war goal with the current id
+	 * */
+	public void startWar(long id) {
+		throw new NotImplementedException();
 	}
 
 }
