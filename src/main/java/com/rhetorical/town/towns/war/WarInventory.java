@@ -1,6 +1,7 @@
 package com.rhetorical.town.towns.war;
 
 import com.rhetorical.town.TheNewTown;
+import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.InventorySystem;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -78,7 +80,7 @@ public class WarInventory implements Listener, InventorySystem {
 	}
 
 	private void setupMenu() {
-		menu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "War Menu");
+		menu = Bukkit.createInventory(new TownInventoryHolder(true, getTown()), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "War Menu");
 
 		ItemStack ongoing = new ItemStack(Material.BOOK);
 		{
@@ -125,7 +127,7 @@ public class WarInventory implements Listener, InventorySystem {
 		pages = pages == 0 ? 1 : pages;
 
 		for (int i = 0; i < pages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevMenu, TownMenuGroup.COMPLETED_WAR_GOAL_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "War Goals - (" + (i + 1) + "/" + pages + ")");
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, getTown(), null, prevMenu, TownMenuGroup.COMPLETED_WAR_GOAL_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "War Goals - (" + (i + 1) + "/" + pages + ")");
 
 			if (prevMenu != null)
 				if (prevMenu.getHolder() instanceof TownInventoryHolder) {
@@ -145,14 +147,14 @@ public class WarInventory implements Listener, InventorySystem {
 				int h, m;
 				if (!goal.isCompleted()) {
 					m = (int) LocalDateTime.now().until(goal.getCompletionDate(), ChronoUnit.MINUTES);
-					h = m % 60;
-					m /= 60;
+					h = m / 60;
+					m %= 60;
 					lore.add(ChatColor.YELLOW + String.format("Time Left: %sh%sm", h, m));
 					lore.add(ChatColor.YELLOW + "[RMB] Cancel Justification");
 				} else {
 					m = (int) LocalDateTime.now().until(goal.getExpiryDate(), ChronoUnit.MINUTES);
-					h = m % 60;
-					m /= 60;
+					h = m / 60;
+					m %= 60;
 					lore.add(ChatColor.YELLOW + String.format("Expires in: %sh%sm", h, m));
 					lore.add(ChatColor.YELLOW + "[LMB] Declare War!");
 				}
@@ -183,9 +185,10 @@ public class WarInventory implements Listener, InventorySystem {
 
 		List<Town> towns = new ArrayList<>(TownManager.getInstance().getTowns().values());
 
-		for (Town town : new ArrayList<>(towns))
-			if (t.getAllies().contains(town.getName()) || t.getName().equalsIgnoreCase(town.getName()))
+		for (Town town : new ArrayList<>(towns)) {
+			if (t.getAllies().contains(town.getName()) || t.getName().equalsIgnoreCase(town.getName()) || t.isJustifyingAgainst(town.getName()))
 				towns.remove(town);
+		}
 
 		int pages = (int) Math.ceil(towns.size() / 27f);
 
@@ -193,7 +196,7 @@ public class WarInventory implements Listener, InventorySystem {
 
 
 		for (int i = 0; i < pages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevMenu, TownMenuGroup.JUSTIFY_WAR_TOWN_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Justify War Goal - (" + (i + 1) + "/" + pages + ")");
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, getTown(), null, prevMenu, TownMenuGroup.JUSTIFY_WAR_TOWN_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Justify War Goal - (" + (i + 1) + "/" + pages + ")");
 
 			if (prevMenu != null)
 				if (prevMenu.getHolder() instanceof TownInventoryHolder) {
@@ -235,6 +238,43 @@ public class WarInventory implements Listener, InventorySystem {
 		return ((TownInventoryHolder) holder).isShouldCancelClick();
 	}
 
+	private void openWarGoalChoice(Player p, String town) {
+
+		Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, TownManager.getInstance().getTownOfPlayer(p.getUniqueId()).getName(), town), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "Declare War Goal");
+
+		ItemStack land = new ItemStack(Material.GRASS_BLOCK);
+		ItemMeta landMeta = land.getItemMeta();
+		landMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Justify War Goal for Land");
+		List<String> landLore = new ArrayList<>();
+		landLore.add(ChatColor.YELLOW + "[LMB] Begin justifying war goal.");
+		landMeta.setLore(landLore);
+		land.setItemMeta(landMeta);
+
+		ItemStack money = new ItemStack(Material.GOLD_INGOT);
+		ItemMeta moneyMeta = money.getItemMeta();
+		moneyMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Justify War Goal for Money");
+		List<String> moneyLore = new ArrayList<>();
+		moneyLore.add(ChatColor.YELLOW + "[LMB] Begin justifying war goal.");
+		moneyMeta.setLore(moneyLore);
+		money.setItemMeta(moneyMeta);
+
+		ItemStack conquest = new ItemStack(Material.SKELETON_SKULL);
+		ItemMeta conquestMeta = conquest.getItemMeta();
+		conquestMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Justify War Goal of Conquest");
+		List<String> conquestLore = new ArrayList<>();
+		conquestLore.add(ChatColor.YELLOW + "[LMB] Begin justifying war goal.");
+		conquestMeta.setLore(conquestLore);
+		conquest.setItemMeta(conquestMeta);
+
+		inv.setItem(11, land);
+		inv.setItem(13, money);
+		inv.setItem(15, conquest);
+
+		inv.setItem(26, back);
+
+		p.openInventory(inv);
+	}
+
 	public void unregister() {
 		HandlerList.unregisterAll(this);
 	}
@@ -270,6 +310,20 @@ public class WarInventory implements Listener, InventorySystem {
 	@EventHandler
 	@SuppressWarnings("Duplicates")
 	public void onClick(InventoryClickEvent e) {
+		TownInventoryHolder holder = null;
+		if (e.getInventory().getHolder() instanceof TownInventoryHolder)
+			holder = (TownInventoryHolder) e.getInventory().getHolder();
+
+		if (holder != null)
+			if (!holder.getOwner().equalsIgnoreCase(getTown()))
+				return;
+
+		int slot = e.getRawSlot();
+
+		if (slot >= e.getInventory().getSize())
+			return;
+
+
 		if (!shouldCancelClick(e.getInventory()))
 			return;
 
@@ -294,8 +348,6 @@ public class WarInventory implements Listener, InventorySystem {
 			}
 		}
 
-		int slot = e.getRawSlot();
-
 		if (e.getInventory().equals(getMenu())) {
 			if (slot == 11) {
 				setupCurrentWar();
@@ -310,32 +362,92 @@ public class WarInventory implements Listener, InventorySystem {
 			}
 		}
 
-		TownInventoryHolder holder = null;
-
-		if (e.getInventory().getHolder() instanceof TownInventoryHolder)
-			holder = (TownInventoryHolder) e.getInventory().getHolder();
-
 		if (holder != null) {
 			if (holder.getMenuGroup() == TownMenuGroup.COMPLETED_WAR_GOAL_LIST) {
 				if (clicked.equals(prev)) {
 					if (holder.getPrevPage() != null)
 						p.openInventory(holder.getPrevPage());
+					return;
 				} else if (clicked.equals(next)) {
 					if (holder.getNextPage() != null)
 						p.openInventory(holder.getNextPage());
+					return;
 				} else if (clicked.equals(back)) {
 					p.openInventory(getMenu());
+					return;
 				}
+				if (e.getAction() == InventoryAction.PICKUP_HALF) {
+
+					String idStr = clicked.getItemMeta().getDisplayName();
+					idStr = idStr.replace(ChatColor.GOLD + "", "").replace(ChatColor.BOLD + "", "");
+					long id;
+
+					try {
+						id = Long.parseLong(idStr);
+					} catch (Exception ignored) {
+						ignored.printStackTrace();
+						return;
+					}
+
+					if (town.cancelWarGoal(id)) {
+						p.sendMessage(ChatColor.GREEN + "Successfully cancelled war goal justification!");
+					} else {
+						p.sendMessage(ChatColor.RED + "Could not cancel war goal justification!");
+					}
+					p.openInventory(getMenu());
+					return;
+				}
+
 			} else if (holder.getMenuGroup() == TownMenuGroup.JUSTIFY_WAR_TOWN_LIST) {
 				if (clicked.equals(prev)) {
 					if (holder.getPrevPage() != null)
 						p.openInventory(holder.getPrevPage());
+					return;
 				} else if (clicked.equals(next)) {
 					if (holder.getNextPage() != null)
 						p.openInventory(holder.getNextPage());
+					return;
 				} else if (clicked.equals(back)) {
 					p.openInventory(getMenu());
+					return;
 				}
+
+				String targetTown = clicked.getItemMeta().getDisplayName().replace(ChatColor.GOLD + "" + ChatColor.BOLD, "");
+				Town target = TownManager.getInstance().getTown(targetTown);
+				if (target == null) {
+					Bukkit.getLogger().severe("Could not target town " + targetTown + " for creating a war goal!");
+					return;
+				}
+
+				openWarGoalChoice(p, targetTown);
+				return;
+			} else if (holder.getMenuGroup() == TownMenuGroup.WAR_GOAL_CHOICE) {
+				if (clicked.equals(back)) {
+					p.openInventory(getTownList());
+					return;
+				}
+
+				String target = holder.getTownToJustifyAgaint();
+
+				WarGoalObjective obj = null;
+
+				if (slot == 11) {
+					obj = WarGoalObjective.LAND;
+				} else if (slot == 13) {
+					obj = WarGoalObjective.MONEY;
+				} else if (slot == 15) {
+					obj = WarGoalObjective.CONQUEST;
+				}
+
+				if (obj == null)
+					return;
+
+				boolean success = town.createWarGoal(target, obj);
+				p.openInventory(getMenu());
+				if (success)
+					p.sendMessage(ChatColor.GREEN + "Successfully created war goal!");
+				else
+					p.sendMessage(ChatColor.RED + "Could nto create war goal!");
 			}
 
 		}

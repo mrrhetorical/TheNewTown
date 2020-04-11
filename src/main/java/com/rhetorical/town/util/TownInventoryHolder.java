@@ -14,22 +14,27 @@ public class TownInventoryHolder implements InventoryHolder {
 
 	private String townToJustifyAgaint;
 
-	public TownInventoryHolder(boolean shouldCancelClick) {
+	private String owner;
+
+	public TownInventoryHolder(boolean shouldCancelClick, String town) {
 		setShouldCancelClick(shouldCancelClick);
 		setMenuGroup(TownMenuGroup.SINGLE);
+		setOwner(town);
 	}
 
-	public TownInventoryHolder(boolean shouldCancelClick, Inventory nextPage, Inventory prevPage, TownMenuGroup group) {
+	public TownInventoryHolder(boolean shouldCancelClick, String town, Inventory nextPage, Inventory prevPage, TownMenuGroup group) {
 		setShouldCancelClick(shouldCancelClick);
 		setNextPage(nextPage);
 		setPrevPage(prevPage);
 		setMenuGroup(group);
+		setOwner(town);
 	}
 
-	public TownInventoryHolder(boolean shouldCancelClick, String townToJustifyAgaint) {
+	public TownInventoryHolder(boolean shouldCancelClick, String town, String townToJustifyAgaint) {
 		setShouldCancelClick(shouldCancelClick);
 		setMenuGroup(TownMenuGroup.WAR_GOAL_CHOICE);
 		setTownToJustifyAgaint(townToJustifyAgaint);
+		setOwner(town);
 	}
 
 
@@ -76,5 +81,13 @@ public class TownInventoryHolder implements InventoryHolder {
 
 	public void setTownToJustifyAgaint(String townToJustifyAgaint) {
 		this.townToJustifyAgaint = townToJustifyAgaint;
+	}
+
+	public String getOwner() {
+		return owner;
+	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
 	}
 }

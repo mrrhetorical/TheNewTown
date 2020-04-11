@@ -99,8 +99,8 @@ public class Town {
 
 
 		ConfigurationSection w = file.getData().getConfigurationSection(getName() + ".warGoals");
-		if (f != null)
-			for (String key : f.getKeys(false)) {
+		if (w != null)
+			for (String key : w.getKeys(false)) {
 				long id;
 				try {
 					id = Long.parseLong(key);
@@ -148,6 +148,7 @@ public class Town {
 		}
 
 		inventory = new TownInventory(getName());
+		warInventory = new WarInventory(getName());
 	}
 
 	void loadPlots(TownFile file) {
@@ -554,15 +555,24 @@ public class Town {
 		return true;
 	}
 
-	public void cancelWarGoal(long id) {
+	public boolean isJustifyingAgainst(String target) {
+		for (WarGoal goal : getActiveWarGoals()) {
+			if (goal.getTarget().equalsIgnoreCase(target))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean cancelWarGoal(long id) {
 		for (WarGoal goal : new ArrayList<>(getActiveWarGoals())) {
 			if (goal.getId() == id) {
 				getActiveWarGoals().remove(goal);
 				TownFile file = TownFile.open();
 				file.getData().set(getName() + ".warGoals." + id, null);
-				return;
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**

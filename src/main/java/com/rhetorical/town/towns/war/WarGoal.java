@@ -79,7 +79,7 @@ public class WarGoal {
 		// 24 hours * 60 minutes = 1440 minutes per day
 
 		long minutes = 1440 + modifier;
-		minutes = minutes < 20 ? 20 : modifier;
+		minutes = minutes < 20 ? 20 : minutes;
 
 		setCompletionDate(getStartDate().plusMinutes(minutes));
 
