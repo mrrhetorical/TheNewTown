@@ -126,7 +126,7 @@ public class TownInventory implements Listener, InventorySystem {
 	}
 
 	public void setupMenu() {
-		menu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown());
+		menu = Bukkit.createInventory(new TownInventoryHolder(true, getTown()), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown());
 
 		ItemStack info = new ItemStack(Material.PAPER);
 		ItemMeta infoMeta = info.getItemMeta();
@@ -157,11 +157,11 @@ public class TownInventory implements Listener, InventorySystem {
 		getMenu().setItem(16, flagsItem);
 		getMenu().setItem(22, close);
 
-		flags = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Town-wide Flags");
+		flags = Bukkit.createInventory(new TownInventoryHolder(true, getTown()), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Town-wide Flags");
 	}
 
 	public void setupInfoMenu() {
-		infoMenu = Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Stats");
+		infoMenu = Bukkit.createInventory(new TownInventoryHolder(true, getTown()), 27, ChatColor.BLUE + "" + ChatColor.BOLD + getTown() + " - Stats");
 
 		Town town = TownManager.getInstance().getTown(getTown());
 		if (town == null)
@@ -256,7 +256,7 @@ public class TownInventory implements Listener, InventorySystem {
 		numPages = numPages == 0 ? 1 : numPages;
 
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.INVITE), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Invite Players - (" + (i + 1) + "/" + numPages + ")");
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, getTown(), null, prevPage, TownMenuGroup.INVITE), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Invite Players - (" + (i + 1) + "/" + numPages + ")");
 
 			if (prevPage != null)
 				if (prevPage.getHolder() instanceof TownInventoryHolder) {
@@ -309,7 +309,7 @@ public class TownInventory implements Listener, InventorySystem {
 		numPages = numPages == 0 ? 1 : numPages;
 
 		for (int i = 0; i < numPages; i++) {
-			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, null, prevPage, TownMenuGroup.MEMBER_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Member List - (" + (i + 1) + "/" + numPages + ")");
+			Inventory inv = Bukkit.createInventory(new TownInventoryHolder(true, getTown(), null, prevPage, TownMenuGroup.MEMBER_LIST), 36, ChatColor.BLUE + "" + ChatColor.BOLD + "Member List - (" + (i + 1) + "/" + numPages + ")");
 
 			if (prevPage != null)
 				if (prevPage.getHolder() instanceof TownInventoryHolder) {
@@ -362,7 +362,7 @@ public class TownInventory implements Listener, InventorySystem {
 
 	public Inventory openPlotFlagInventory(Plot plot) {
 
-		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(new TownInventoryHolder(true), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "Flags for (" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName());
+		Inventory inv = getPlotFlagInventories().containsKey(plot) ? getPlotFlagInventories().get(plot) : Bukkit.createInventory(new TownInventoryHolder(true, getTown()), 27, ChatColor.BLUE + "" + ChatColor.BOLD + "Flags for (" + plot.getX() + ", " + plot.getZ() + ") in " + plot.getWorldName());
 
 		for (int i = 0; i < TownFlag.values().length; i++) {
 			TownFlag flag = TownFlag.values()[i];
@@ -408,6 +408,21 @@ public class TownInventory implements Listener, InventorySystem {
 
 	@EventHandler
 	public void onClick(InventoryClickEvent e) {
+
+		TownInventoryHolder holder = null;
+		if (e.getInventory().getHolder() instanceof TownInventoryHolder)
+			holder = (TownInventoryHolder) e.getInventory().getHolder();
+
+		if (holder != null)
+			if (!holder.getOwner().equalsIgnoreCase(getTown()))
+				return;
+
+		int slot = e.getRawSlot();
+
+		if (slot >= e.getInventory().getSize())
+			return;
+
+
 		if (!shouldCancelClick(e.getInventory()))
 			return;
 
@@ -432,7 +447,6 @@ public class TownInventory implements Listener, InventorySystem {
 				openMenu(p);
 				return;
 			} else if (e.getInventory().getHolder() instanceof TownInventoryHolder) {
-				TownInventoryHolder holder = (TownInventoryHolder) e.getInventory().getHolder();
 				if (holder.getMenuGroup() == TownMenuGroup.MEMBER_LIST) {
 					openInfoMenu(p);
 					return;
@@ -470,11 +484,6 @@ public class TownInventory implements Listener, InventorySystem {
 					p.openInventory(members);
 			}
 		}
-
-		TownInventoryHolder holder = null;
-		if (e.getInventory().getHolder() instanceof TownInventoryHolder)
-			holder = (TownInventoryHolder) e.getInventory().getHolder();
-
 
 		//is invite menu
 		if (holder != null)
@@ -536,7 +545,6 @@ public class TownInventory implements Listener, InventorySystem {
 
 		//is flags menu
 		if (e.getInventory().equals(getFlags())) {
-			int slot = e.getRawSlot();
 			TownFlag flag;
 
 			if (slot >= TownFlag.values().length)
@@ -551,7 +559,6 @@ public class TownInventory implements Listener, InventorySystem {
 		}
 
 		if (getPlotFlagInventories().values().contains(e.getInventory())) {
-			int slot = e.getRawSlot();
 			TownFlag flag;
 
 			if (slot >= TownFlag.values().length)
