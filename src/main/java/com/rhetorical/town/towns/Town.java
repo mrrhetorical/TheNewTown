@@ -569,6 +569,7 @@ public class Town {
 				getActiveWarGoals().remove(goal);
 				TownFile file = TownFile.open();
 				file.getData().set(getName() + ".warGoals." + id, null);
+				file.saveData();
 				return true;
 			}
 		}
