@@ -11,6 +11,9 @@ period:
 #Enter message location: Where should the enter message be shown when entering / exiting plots? Valid options: ACTIONBAR, TITLE, SUBTITLE, CHAT
 enterMessageLocation: SUBTITLE
 
+# Enable War: Should wars be enabled on this server?
+enable_war: false
+
 # Border Colors: What color should the borders be to other towns given relation?
 border:
   self:
@@ -27,7 +30,6 @@ border:
   hostile:
     height: 3
     color: 0xFF0000
-
 
 # cost = flat rate + cost per plot (amount of plots - maximum plots of previous tier)
 

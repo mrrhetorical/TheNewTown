@@ -1062,8 +1062,6 @@ public class TownCommand {
 			if (!town.depositToBank(p.getUniqueId(), amount))
 				sender.sendMessage(ChatColor.RED + String.format("Could not deposit $%s to your town's bank!", amount));
 			else {
-				town.setBank(town.getBank() + amount);
-				town.save();
 				sender.sendMessage(ChatColor.GREEN + String.format("Successfully deposited $%s into your town's bank! New balance: $%s", amount, town.getBank()));
 			}
 		} else if (args[0].equalsIgnoreCase("withdraw")) {
@@ -1106,8 +1104,6 @@ public class TownCommand {
 			if (!town.withdrawFromBank(p.getUniqueId(), amount))
 				sender.sendMessage(ChatColor.RED + String.format("Could not withdraw $%s from your town's bank!", amount));
 			else {
-				town.setBank(town.getBank() - amount);
-				town.save();
 				sender.sendMessage(ChatColor.GREEN + String.format("Successfully withdrew $%s from your town's bank! New balance: $%s", amount, town.getBank()));
 			}
 		} else {

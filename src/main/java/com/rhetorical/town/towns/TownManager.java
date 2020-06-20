@@ -203,9 +203,10 @@ public class TownManager {
 			@Override
 			public void run() {
 
-				for (Town town : getTowns().values())
+				for (Town town : getTowns().values()) {
 					town.collectTaxes();
-
+					town.updateWarGoals();
+				}
 				startCheckups();
 			}
 		};

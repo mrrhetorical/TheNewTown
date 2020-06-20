@@ -1,7 +1,6 @@
 package com.rhetorical.town.towns.war;
 
 import com.rhetorical.town.TheNewTown;
-import com.rhetorical.town.files.TownFile;
 import com.rhetorical.town.towns.InventorySystem;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
@@ -116,7 +115,7 @@ public class WarInventory implements Listener, InventorySystem {
 		throw new NotImplementedException();
 	}
 
-	private void updateWarGoals() {
+	private void updateWarGoalsPage() {
 		Town t = TownManager.getInstance().getTown(getTown());
 
 
@@ -151,12 +150,18 @@ public class WarInventory implements Listener, InventorySystem {
 					m %= 60;
 					lore.add(ChatColor.YELLOW + String.format("Time Left: %sh%sm", h, m));
 					lore.add(ChatColor.YELLOW + "[RMB] Cancel Justification");
+				} else if (goal.isExpired()) {
+					Player mayor = Bukkit.getPlayer(t.getMayor());
+					if (mayor.isOnline())
+						mayor.sendMessage(ChatColor.RED + String.format("Your war goal against %s has expired!", goal.getTarget()));
+					continue;
 				} else {
 					m = (int) LocalDateTime.now().until(goal.getExpiryDate(), ChronoUnit.MINUTES);
 					h = m / 60;
 					m %= 60;
 					lore.add(ChatColor.YELLOW + String.format("Expires in: %sh%sm", h, m));
 					lore.add(ChatColor.YELLOW + "[LMB] Declare War!");
+					lore.add(ChatColor.YELLOW + "[RMB] Cancel Justification");
 				}
 				meta.setLore(lore);
 				item.setItemMeta(meta);
@@ -354,7 +359,7 @@ public class WarInventory implements Listener, InventorySystem {
 				if (getCurrentWar() != null)
 					p.openInventory(getCurrentWar());
 			} else if (slot == 13) {
-				updateWarGoals();
+				updateWarGoalsPage();
 				p.openInventory(getWarGoals());
 			} else if (slot == 15) {
 				updateTownList();

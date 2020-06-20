@@ -13,6 +13,7 @@ import com.rhetorical.town.util.WorldGuardUtil;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -49,6 +50,8 @@ public class Town {
 	private WarInventory warInventory;
 
 	private Set<String> allies = new HashSet<>();
+
+	private List<String> queuedMessages = new ArrayList<>(); // Messages to be sent to the town's mayor when they are next online.
 
 	/**
 	 * Used in town loading.
@@ -119,6 +122,8 @@ public class Town {
 
 		bank = file.getData().getDouble(getName() + ".balance");
 
+		queuedMessages = file.getData().getStringList(getName() + ".queuedMessages");
+
 		inventory = new TownInventory(getName());
 		warInventory = new WarInventory(getName());
 	}
@@ -184,6 +189,7 @@ public class Town {
 
 		file.getData().set(getName() + ".home", getHome() != null ? getHome().toString() : "none");
 
+		file.getData().set(getName() + ".balance", getBank());
 
 		file.getData().set(getName() + ".lastTaxPeriod", DateTimeConverter.convert(lastTaxPeriod));
 
@@ -200,10 +206,14 @@ public class Town {
 			plot.save(getName(), file);
 		}
 
+		file.getData().set(getName() + ".warGoals", null);
+
 		for (WarGoal goal : getActiveWarGoals()) {
 			String base = getName() + ".warGoals." + goal.getId();
 			goal.save(file, base);
 		}
+
+		file.getData().set(getName() + ".queuedMessages", getQueuedMessages());
 
 		file.saveData();
 	}
@@ -357,6 +367,10 @@ public class Town {
 		warInventory.unregister();
 	}
 
+	public List<String> getQueuedMessages() {
+		return queuedMessages;
+	}
+
 	public TownType getTownType() {
 		return townType;
 	}
@@ -445,6 +459,25 @@ public class Town {
 		}
 
 		save();
+	}
+
+	void updateWarGoals() {
+		final List<WarGoal> goals = new ArrayList<>(getActiveWarGoals());
+
+		for (WarGoal goal : goals) {
+			if (goal.isExpired()) {
+				String exprMsg = ChatColor.RED + String.format("Your war goal against %s has expired!", goal.getTarget());
+				Player m = Bukkit.getPlayer(mayor);
+				if (m.isOnline())
+					m.sendMessage(exprMsg);
+				else
+					getQueuedMessages().add(0, exprMsg);
+
+
+				getActiveWarGoals().remove(goal);
+				save();
+			}
+		}
 	}
 
 	private static TownType calculateTownSize(int plots) {

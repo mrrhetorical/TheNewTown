@@ -463,8 +463,12 @@ public class TownInventory implements Listener, InventorySystem {
 			if (e.getRawSlot() == 10) {
 				openInfoMenu((Player) e.getWhoClicked());
 			} else if (e.getRawSlot() == 12) {
-				Town town = TownManager.getInstance().getTown(getTown());
-				p.openInventory(town.getWarInventory().getMenu());
+				if (TheNewTown.getInstance().isWarEnabled()) {
+					Town town = TownManager.getInstance().getTown(getTown());
+					p.openInventory(town.getWarInventory().getMenu());
+				} else {
+					p.sendMessage(ChatColor.RED + "War is not allowed on this server!");
+				}
 			} else if (e.getRawSlot() == 14) {
 				setupInviteMenu();
 				if (invite != null)

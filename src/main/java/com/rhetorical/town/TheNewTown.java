@@ -28,6 +28,8 @@ public class TheNewTown extends JavaPlugin {
 	private final long landMultiplier = 10L;
 	private final long killMultiplier = 1L;
 
+	private boolean warEnabled = false;
+
 	private EnterMessageLocation enterMessageLocation;
 
 	@Override
@@ -43,6 +45,8 @@ public class TheNewTown extends JavaPlugin {
 		reloadConfig();
 
 		setCreationCost((float) getConfig().getDouble("creation_cost"));
+
+		warEnabled = getConfig().getBoolean("enable_war");
 
 		String enterLocation = getConfig().getString("enterMessageLocation");
 		try {
@@ -86,6 +90,10 @@ public class TheNewTown extends JavaPlugin {
 
 	public float getCreationCost() {
 		return creationCost;
+	}
+
+	public boolean isWarEnabled() {
+		return warEnabled;
 	}
 
 	@Override

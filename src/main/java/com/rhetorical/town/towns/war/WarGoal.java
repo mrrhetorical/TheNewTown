@@ -1,7 +1,6 @@
 package com.rhetorical.town.towns.war;
 
 import com.rhetorical.town.files.TownFile;
-import com.rhetorical.town.files.WarFile;
 import com.rhetorical.town.towns.Town;
 import com.rhetorical.town.towns.TownManager;
 import com.rhetorical.town.util.DateTimeConverter;
@@ -83,6 +82,7 @@ public class WarGoal {
 
 		setCompletionDate(getStartDate().plusMinutes(minutes));
 
+		//todo - make this configurable
 		//expiry date 48 hours after completion date
 		setExpiryDate(getCompletionDate().plusHours(48));
 	}
