@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
@@ -304,6 +305,32 @@ class PlotListener implements Listener {
 		if(e.getBlock().getType() == Material.FIRE)
 			if (!getPlot().getFlag(TownFlag.FIRE_TICK))
 				e.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onTrample(PlayerInteractEvent e) {
+		if (e.getAction() != Action.PHYSICAL)
+			return;
+
+		if (e.getPlayer().hasPermission("tnt.admin") || e.getPlayer().isOp())
+			return;
+
+		Block b = e.getClickedBlock();
+
+		if (b == null)
+			return;
+
+		if (!getPlot().isInPlot(b.getLocation()))
+			return;
+
+		if (b.getType() == Material.FARMLAND) {
+			if (getPlot().getFlag(TownFlag.ALLOW_MODIFICATION))
+				return;
+
+			if (getPlot().getOwner().equals(e.getPlayer().getUniqueId()))
+				return;
+			e.setCancelled(true);
+		}
 	}
 
 }

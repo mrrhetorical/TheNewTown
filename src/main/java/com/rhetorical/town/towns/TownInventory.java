@@ -77,8 +77,10 @@ public class TownInventory implements Listener, InventorySystem {
 		menu = null;
 		infoMenu = null;
 		flags = null;
-		invite.clear();
-		members.clear();
+		if (invite != null)
+			invite.clear();
+		if (members != null)
+			members.clear();
 		back = null;
 		next = null;
 		prev = null;

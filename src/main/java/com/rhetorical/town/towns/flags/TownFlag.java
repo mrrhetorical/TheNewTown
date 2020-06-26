@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum TownFlag {
-	NO_PVP(true, "Disallow PvP", "Disallow's pvp within the town's borders."), // Disables pvp within the town border. (default: true) // done
-	ALLOW_MODIFICATION(true, "Allow block griefing", "Allows residents to break and destroy blocks in plots within the town they are not leasing."), // Allows residents to break and destroy blocks in plots they are not leasing. (default: true) // done
-	ALLOW_PICKUP(true, "Allow item pickup", "Allows non residents to pick up items within the town border."), // Allows picking up items by non residents within the town borders. (default: true) // done
-	ALLOW_DROP(true, "Allow item drop", "Allows non residents to drop items within the town border."), // Allows dropping of items by non residents within the town borders. (default: true) // done
-	MOB_SPAWNING(false, "Allow monster spawning", "Disables mob spawning within the town."), // Disables mob spawning within the town (default: false) // done
-	FIRE_TICK(false, "Allow fire spread", "Disables fire spread within the town."), // Disables fire spread (default: false) // done
-	LAVA_FLOW(false, "Allow lava flow", "Disables lava flow within the town."), // Disables lava flow in the chunk (default: false) // done
-	WATER_FLOW(false, "Allow water flow", "Disables water flow within the town."), // Disables water flow in the chunk (default: false) // done
-	ANIMAL_ABUSE(false, "Disallow animal abuse", "Prevents players from killing non-hostile mobs."), // Disables animal abuse against friendly animals (default: false) // done
-	ALIEN_INTERACT(false, "Allow nonresident interaction", "Allows non residents to interact with items within the town."), // Should non-residents be able to interact with items within the town? (default: false) // done
+	NO_PVP(true, "PvP", "True: PvP is enabled in town."), // Disables pvp within the town border. (default: true) // done
+	ALLOW_MODIFICATION(true, "Block Griefing", "True: Residents may break blocks in any plot."), // Allows residents to break and destroy blocks in plots they are not leasing. (default: true) // done
+	ALLOW_PICKUP(true, "Item Pickup", "True: Non-residents may pickup items in town."), // Allows picking up items by non residents within the town borders. (default: true) // done
+	ALLOW_DROP(true, "Item Drop", "True: Non-residents may drop items in town."), // Allows dropping of items by non residents within the town borders. (default: true) // done
+	MOB_SPAWNING(false, "Monster Spawning", "True: Monsters spawn in town."), // Disables mob spawning within the town (default: false) // done
+	FIRE_TICK(false, "Fire Spread", "True: Fire spreads in town."), // Disables fire spread (default: false) // done
+	LAVA_FLOW(false, "Lava Flow", "True: Lava flows in town."), // Disables lava flow in the chunk (default: false) // done
+	WATER_FLOW(false, "Water Flow", "True: Water flows in the town."), // Disables water flow in the chunk (default: false) // done
+	ANIMAL_ABUSE(false, "Kill Passive Animals", "True: Players cannot kill passive mobs."), // Disables animal abuse against friendly animals (default: false) // done
+	ALIEN_INTERACT(false, "Interaction", "True: Allows non-residents to open doors, pull levers, loot chests, etc."), // Should non-residents be able to interact with items within the town? (default: false) // done
 	;
 
 	private final boolean defaultValue;
