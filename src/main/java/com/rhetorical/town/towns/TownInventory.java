@@ -21,6 +21,10 @@ import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class TownInventory implements Listener, InventorySystem {
@@ -188,18 +192,37 @@ public class TownInventory implements Listener, InventorySystem {
 		ItemMeta financialMeta = financials.getItemMeta();
 		financialMeta.setDisplayName("" + ChatColor.GOLD + ChatColor.BOLD + "Finances");
 		List<String> financialLore = new ArrayList<>();
-		financialLore.add(ChatColor.YELLOW + "Treasury balance: " + ChatColor.GREEN + "$" + town.getBank());
+
 		float nextUpkeep = TownManager.getInstance().getUpkeep(town);
 		nextUpkeep = Math.round(nextUpkeep * 100f) / 100f;
-		financialLore.add(ChatColor.YELLOW + "Next Upkeep Bill: " + ChatColor.GREEN + "$" + nextUpkeep);
-		financialLore.add(ChatColor.YELLOW + "Tax Rate: " + ChatColor.RED + "$" + town.getTax() + " / tax period");
+
+		financialLore.add(ChatColor.YELLOW + "Treasury balance: " + (town.getBank() > nextUpkeep ? ChatColor.GRAY : ChatColor.RED) + "$" + town.getBank());
+		financialLore.add(ChatColor.YELLOW + "Next Upkeep Bill: " + ChatColor.GRAY + "$" + nextUpkeep);
+		financialLore.add(ChatColor.YELLOW + "Tax Rate: " + ChatColor.GRAY + "$" + town.getTax() + " / tax period");
 		float expectedRevenue = (town.getResidents().size() - 1) * town.getTax();
 		for (Plot plot : town.getPlots())
 			if (plot.getLeaser() != null)
 				expectedRevenue += plot.getCost();
 
 		expectedRevenue = Math.round(expectedRevenue * 100f) / 100f;
-		financialLore.add(ChatColor.YELLOW + "Expected Tax Revenue: " + (expectedRevenue >= nextUpkeep ? ChatColor.GREEN : ChatColor.RED) + "$" + expectedRevenue);
+		financialLore.add(ChatColor.YELLOW + "Expected Tax Revenue: " + (expectedRevenue >= nextUpkeep ? ChatColor.GREEN : ChatColor.GRAY) + "$" + expectedRevenue);
+
+		//tax period stuff
+
+		LocalDateTime now = LocalDateTime.now();
+
+		LocalDateTime nextTaxDate = town.getLastTaxPeriod().plusHours(TownManager.getInstance().getTaxPeriod());
+		LocalDateTime nextUpkeepDate = town.getLastUpkeepPeriod().plusHours(TownManager.getInstance().getUpkeepPeriod());
+
+//		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd hh:mm a O"); // 06/26 3:00pm GMT+&
+
+		DateTimeFormatter format = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT);
+
+		financialLore.add(ChatColor.YELLOW + "Next Upkeep Date: " + ChatColor.GRAY + nextUpkeepDate.format(format));
+		financialLore.add(ChatColor.YELLOW + "Next Tax Date: " + ChatColor.GRAY + nextTaxDate.format(format));
+
+		//end tax period stuff
+
 		financialMeta.setLore(financialLore);
 		financials.setItemMeta(financialMeta);
 

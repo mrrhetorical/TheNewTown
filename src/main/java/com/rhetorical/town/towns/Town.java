@@ -282,6 +282,14 @@ public class Town {
 		return activeWarGoals;
 	}
 
+	public LocalDateTime getLastTaxPeriod() {
+		return lastTaxPeriod;
+	}
+
+	public LocalDateTime getLastUpkeepPeriod() {
+		return lastUpkeepPeriod;
+	}
+
 	public boolean addPlot(Chunk chunk) {
 		if (TownManager.getInstance().isChunkClaimed(chunk))
 			return false;
@@ -421,7 +429,8 @@ public class Town {
 		if (lastUpkeepPeriod == null)
 			lastUpkeepPeriod = now;
 
-		if (ChronoUnit.HOURS.between(now, lastTaxPeriod) >= TownManager.getInstance().getTaxPeriod()) {
+		if (now.isAfter(getLastTaxPeriod().plusHours(TownManager.getInstance().getTaxPeriod()))) {
+//		if (ChronoUnit.HOURS.between(now, lastTaxPeriod) >= TownManager.getInstance().getTaxPeriod() && now.isAfter(lastTaxPeriod)) {
 			lastTaxPeriod = now;
 			List<UUID> residents = new ArrayList<>(getResidents());
 			double collected = 0d;
@@ -446,7 +455,8 @@ public class Town {
 //				Bukkit.getLogger().severe("Could not deposit money into mayor of " + getName() + "'s account!");
 		}
 
-		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) >= TownManager.getInstance().getUpkeepPeriod()) {
+		if (now.isAfter(getLastUpkeepPeriod().plusHours(TownManager.getInstance().getUpkeepPeriod()))) {
+//		if (ChronoUnit.HOURS.between(now, lastUpkeepPeriod) >= TownManager.getInstance().getUpkeepPeriod() && now.isAfter(lastUpkeepPeriod)) {
 			lastUpkeepPeriod = now;
 
 //			EconomyResponse tax = TheNewTown.getInstance().getEconomy().withdrawPlayer(Bukkit.getOfflinePlayer(getMayor()), (double) TownManager.getInstance().getUpkeep(this));
