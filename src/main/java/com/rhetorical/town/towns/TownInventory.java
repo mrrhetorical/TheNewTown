@@ -560,6 +560,7 @@ public class TownInventory implements Listener, InventorySystem {
 
 			Town town = TownManager.getInstance().getTown(getTown());
 			town.setFlag(flag, !town.getFlag(flag));
+			town.save();
 			setupFlagsMenu();
 			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1.0f, 0.4f);
 		}

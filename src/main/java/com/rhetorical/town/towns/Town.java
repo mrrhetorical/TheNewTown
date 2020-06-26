@@ -96,7 +96,7 @@ public class Town {
 					flag = TownFlag.valueOf(key.toUpperCase());
 				} catch (Exception ignored) { continue; }
 
-				boolean v = file.getData().getBoolean(getFlags()  + ".flags." + key);
+				boolean v = file.getData().getBoolean(getName()  + ".flags." + key);
 				setFlag(flag, v);
 			}
 
