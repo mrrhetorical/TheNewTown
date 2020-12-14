@@ -54,6 +54,6 @@ public class WarManager {
 		return false;
 	}
 	public boolean isAtWar(String a, String b) {
-		throw new NotImplementedException();
+		return false;
 	}
 }

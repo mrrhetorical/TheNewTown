@@ -42,7 +42,9 @@ public class TownCommand {
 		Home(ChatColor.YELLOW + "/t home" + ChatColor.RED + " - " + ChatColor.WHITE + "Teleports you to the home for the town.", "tnt.home"), // done
 		Kick(ChatColor.YELLOW + "/t kick [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Kicks a player from your town. (m)", "tnt.kick"),
 		MAP(ChatColor.YELLOW + "/t map (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a map of the surrounding chunks. 'Auto' automatically updates the map.", "tnt.map"),
-		Border(ChatColor.YELLOW + "/t border (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a border of your town. 'Auto' automatically updates the border with changes in height.", "tnt.map"); // done
+		Border(ChatColor.YELLOW + "/t border (auto)" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a border of your town. 'Auto' automatically updates the border with changes in height.", "tnt.map"),
+		Ally(ChatColor.YELLOW + "/t ally [invite/accept/remove] [name]" + ChatColor.RED + " - " + ChatColor.WHITE + "Ally commands to invite towns, remove towns, or accept an invite to ally with another town.", "tnt.ally"),
+		AllyList(ChatColor.YELLOW + "/t allies" + ChatColor.RED + " - " + ChatColor.WHITE + "Shows a list of your allies.", "tnt.ally"); // done
 
 		private String message,
 				permission;
@@ -869,12 +871,12 @@ public class TownCommand {
 
 				int offset = (page - 1) * perPage;
 
-				sender.sendMessage(String.format("##### [Towns List %s/%s] #####", page, (lastPage != 0 ? lastPage : 1)));
+				sender.sendMessage(String.format("[" + ChatColor.GOLD + "Towns List " + ChatColor.GOLD + "%s" + ChatColor.RESET + "/" + ChatColor.GOLD + "%s" + ChatColor.RESET + "]", page, (lastPage != 0 ? lastPage : 1)));
 
 				if (lastPage != 0)
 					for (int i = (townMap.size() - 1) - offset; i >= 0 && i > (townMap.size() - 1) - offset - perPage; i--)
 						try {
-							sender.sendMessage(getTownShortListing(townMap.get(i), townMap.size() - i));
+							sender.sendMessage(ChatColor.GRAY + getTownShortListing(townMap.get(i), townMap.size() - i));
 						} catch (Exception | Error ignored) {
 							Bukkit.getLogger().info(String.format("Error in showing town list! (Page, Entry): (%s, %s)", page, i));
 						}
@@ -1086,6 +1088,110 @@ public class TownCommand {
 				else {
 					sender.sendMessage(ChatColor.GREEN + String.format("Successfully withdrew $%s from your town's bank! New balance: $%s", amount, town.getBank()));
 				}
+			} else if (args[0].equalsIgnoreCase("ally")) {
+				if (!checkPerm(sender, CommandData.Ally))
+					return;
+
+				if (!(sender instanceof Player)) {
+					sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+					return;
+				}
+
+				Player p = (Player) sender;
+
+				if (args.length != 3) {
+					sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t ally [invite/accept/remove] [name]");
+					return;
+				}
+
+				String type = args[1].toLowerCase();
+				String name = args[2];
+
+				if (!type.equals("invite") && !type.equals("accept") && !type.equals("remove")) {
+					sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t ally [invite/accept/remove] [name]");
+					return;
+				}
+
+				Town town = TownManager.getInstance().getTownOfPlayer(p.getUniqueId());
+
+				if (town == null || !town.getMayor().equals(p.getUniqueId())) {
+					sender.sendMessage(ChatColor.RED + "You must be a mayor of a town to do that!");
+					return;
+				}
+
+				Town recipient = TownManager.getInstance().getTown(name);
+
+				if (recipient == null) {
+					sender.sendMessage(ChatColor.RED + "There is no town with that name!");
+					return;
+				}
+
+				if (type.equalsIgnoreCase("invite")) {
+					if (TownManager.getInstance().areAllies(town, recipient)) {
+						sender.sendMessage(ChatColor.RED + "You are already allies!");
+						return;
+					}
+
+					InviteManager.getInstance().generateRequest(town.getName(), recipient.getName());
+					return;
+				} else if (type.equalsIgnoreCase("accept")) {
+					boolean success = InviteManager.getInstance().tryAcceptAllyRequest(recipient.getName(), town.getName());
+
+					if (success) {
+						sender.sendMessage(String.format(ChatColor.GRAY + "You are now allies with %s", recipient.getName()));
+						Player pp = Bukkit.getPlayer(recipient.getMayor());
+						if (pp != null && pp.isOnline())
+							pp.sendMessage(String.format(ChatColor.GRAY + "You are now allies with %s", recipient.getName()));
+					} else {
+						sender.sendMessage(ChatColor.RED + "Could not accept ally request!");
+					}
+					return;
+				}
+
+				if (!TownManager.getInstance().areAllies(town, recipient)) {
+					sender.sendMessage(ChatColor.RED + "You are not allies!");
+					return;
+				}
+
+				town.getAllies().remove(recipient.getName());
+				recipient.getAllies().remove(town.getName());
+
+				sender.sendMessage(ChatColor.GRAY + String.format("You are no longer allies with %s.", recipient.getName()));
+
+				Player otherMayor = Bukkit.getPlayer(recipient.getMayor());
+
+				if (otherMayor != null && otherMayor.isOnline()) {
+					sender.sendMessage(ChatColor.GRAY + String.format("You are no longer allies with %s.", town.getName()));
+				}
+
+				return;
+			} else if (args[0].equalsIgnoreCase("allies")) {
+				if (!checkPerm(sender, CommandData.AllyList))
+					return;
+
+				if (!(sender instanceof Player)) {
+					sender.sendMessage(ChatColor.RED + "You must be a player to use that command!");
+					return;
+				}
+
+				if (args.length != 1) {
+					sender.sendMessage(ChatColor.RED + "Incorrect usage! Correct usage: /t allies");
+					return;
+				}
+
+				Town town = TownManager.getInstance().getTownOfPlayer(((Player) sender).getUniqueId());
+
+				if (town == null) {
+					sender.sendMessage(ChatColor.GRAY + "You must be in a town to use this command.");
+					return;
+				}
+
+				sender.sendMessage(ChatColor.GRAY + String.format("%s's Allies: [%s]", town.getName(), town.getAllies().size()));
+				for (String s : town.getAllies()) {
+					sender.sendMessage(ChatColor.GRAY + String.format("- %s", s));
+				}
+
+				return;
 			} else {
 				if (sender instanceof Player) {
 					Player p = (Player) sender;
@@ -1141,15 +1247,15 @@ public class TownCommand {
 		if (town == null)
 			return "NULL";
 
-		sb.append(String.format("Rank: %s", rank));
-		sb.append(ChatColor.RESET + " | ");
-		sb.append(String.format("Name: %s", town.getName()));
-		sb.append(ChatColor.RESET + " | ");
-		sb.append(String.format("Mayor: %s", Bukkit.getOfflinePlayer(town.getMayor()).getName()));
-		sb.append(ChatColor.RESET + " | ");
-		sb.append(String.format("Size: %s (%s)", town.getTownType().getReadable(), town.getPlots().size()));
-		sb.append(ChatColor.RESET + " | ");
-		sb.append(String.format("Population: %s", town.getResidents().size()));
+		sb.append(String.format("Rank: " + ChatColor.GOLD + "%s", rank));
+		sb.append(ChatColor.GRAY + " | ");
+		sb.append(String.format("Name: " + ChatColor.GOLD + "%s", town.getName()));
+		sb.append(ChatColor.GRAY + " | ");
+		sb.append(String.format("Mayor: " + ChatColor.GOLD + "%s", Bukkit.getOfflinePlayer(town.getMayor()).getName()));
+		sb.append(ChatColor.GRAY + " | ");
+		sb.append(String.format("Size: " + ChatColor.GOLD + "%s " + ChatColor.RESET + "(" + ChatColor.GOLD + "%s" + ChatColor.RESET + ")", town.getTownType().getReadable(), town.getPlots().size()));
+		sb.append(ChatColor.GRAY + " | ");
+		sb.append(String.format("Population: " + ChatColor.GOLD + "%s", town.getResidents().size()));
 
 		return sb.toString();
 	}

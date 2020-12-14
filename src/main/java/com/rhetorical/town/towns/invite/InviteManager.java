@@ -17,11 +17,16 @@ public class InviteManager {
 	private static InviteManager instance;
 
 	private Set<InviteRequest> activeRequests = new HashSet<>();
+	private Set<AllyRequest> activeAllyRequests = new HashSet<>();
 
 	private InviteManager() {}
 
 	public Set<InviteRequest> getActiveRequests() {
 		return activeRequests;
+	}
+
+	public Set<AllyRequest> getActiveAllyRequests() {
+		return activeAllyRequests;
 	}
 
 	public InviteRequest getRequestByRecipient(UUID recipient) {
@@ -99,6 +104,71 @@ public class InviteManager {
 
 		br.runTaskLater(TheNewTown.getInstance(), 2400L);
 
+	}
+
+	public boolean generateRequest(String requester, String recipient) {
+		AllyRequest request = new AllyRequest(requester, recipient);
+
+		Town t = TownManager.getInstance().getTown(requester);
+		Town b = TownManager.getInstance().getTown(recipient);
+		if (t == null || b == null)
+			return false;
+
+		if (t.getAllies().contains(recipient) || b.getAllies().contains(requester))
+			return false;
+
+		boolean response = getActiveAllyRequests().add(request);
+
+		if (response) {
+			Player req = Bukkit.getPlayer(t.getMayor()),
+					rec = Bukkit.getPlayer(b.getMayor());
+
+			if (req != null)
+				req.sendMessage(ChatColor.GRAY + "You sent an invite to " + recipient + " to ally with " + requester + "!");
+
+			if (rec != null)
+				rec.sendMessage(ChatColor.GRAY + "You received an invite from " + requester + " to ally with " + requester + String.format("! Join with '/t ally accept %s'!", requester));
+
+			startTimeout(request);
+		}
+
+		return response;
+	}
+
+	private void startTimeout(AllyRequest request) {
+
+		BukkitRunnable br = new BukkitRunnable() {
+			@Override
+			public void run() {
+				if (!getActiveAllyRequests().remove(request))
+					return;
+				Player requester = Bukkit.getPlayer(TownManager.getInstance().getTown(request.getRequester()).getMayor());
+				Player recipient = Bukkit.getPlayer(TownManager.getInstance().getTown(request.getRecipient()).getMayor());
+
+				if (requester != null)
+					requester.sendMessage(ChatColor.GRAY + "Your invite to " + Bukkit.getOfflinePlayer(request.getRecipient()).getName() + " to ally with " + request.getRequester() + " has expired!");
+				if (recipient != null)
+					recipient.sendMessage(ChatColor.GRAY + "Your invite from " + Bukkit.getOfflinePlayer(request.getRequester()).getName() + " to ally with " + request.getRecipient() + " has expired!");
+			}
+		};
+
+		br.runTaskLater(TheNewTown.getInstance(), 2400L);
+
+	}
+
+	public boolean tryAcceptAllyRequest(String sender, String target) {
+		for (AllyRequest request : new HashSet<>(getActiveAllyRequests())) {
+			if (request.getRecipient().equals(target) && request.getRequester().equalsIgnoreCase(sender)) {
+				getActiveAllyRequests().remove(request);
+				Town t = TownManager.getInstance().getTown(sender);
+				t.addAlly(target);
+				Town t1 = TownManager.getInstance().getTown(target);
+				t1.addAlly(sender);
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

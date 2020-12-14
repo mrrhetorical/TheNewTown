@@ -233,6 +233,10 @@ public class TownManager {
 		return null;
 	}
 
+	public boolean areAllies(Town a, Town b) {
+		return a.getAllies().contains(b.getName()) && b.getAllies().contains(a.getName());
+	}
+
 	public int getUpkeepPeriod() {
 		return upkeepPeriod;
 	}
